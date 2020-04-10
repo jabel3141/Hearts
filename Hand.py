@@ -16,8 +16,7 @@ class Hand:
 		self.hearts = []
 		
 		# create hand of cards split up by suit
-		self.hand = [self.clubs, self.diamonds, 
-					self.spades, self.hearts]
+		self.hand = [self.clubs, self.diamonds, self.spades, self.hearts]
 
 		self.contains2ofclubs = False
 
@@ -25,31 +24,30 @@ class Hand:
 		return len(self.clubs) + len(self.diamonds) + len(self.spades) + len(self.hearts)
 
 	def addCard(self, card):
-		if card.suit == Suit(clubs):
-			if card.rank.rank == 2:
+		if(card.suit == Suit(clubs)):
+			if(card.rank.rank == 2):
 				self.contains2ofclubs = True
 			self.clubs.append(card)
-		elif card.suit == Suit(diamonds):
+		elif(card.suit == Suit(diamonds)):
 			self.diamonds.append(card)
-		elif card.suit == Suit(spades):
+		elif(card.suit == Suit(spades)):
 			self.spades.append(card)
-		elif card.suit == Suit(hearts):
+		elif(card.suit == Suit(hearts)):
 			self.hearts.append(card)
 		else:
-			print 'Invalid card'
+			print('Invalid card')
 
-		if self.size() == 13:
+		if(self.size() == 13):
 			for suit in self.hand:
 				suit.sort()
 
 	def updateHand(self):
-		self.hand = [self.clubs, self.diamonds, 
-					self.spades, self.hearts]
+		self.hand = [self.clubs, self.diamonds, self.spades, self.hearts]
 
 	def getRandomCard(self):
 		suit = randint(0,3)
 		suit = self.hand[suit]
-		while len(suit) == 0:
+		while(len(suit) == 0):
 			suit = randint(0,3)
 			suit = self.hand[suit] 
 		index = randint(0, len(suit)-1)
@@ -59,14 +57,15 @@ class Hand:
 
 
 	def strToCard(self, card):
-		if len(card) == 0: return None
+		if(len(card) == 0):
+			return None
 		
 		suit = card[len(card)-1].lower() # get the suit from the string
 		
 		try:
 			suitIden = suits.index(suit)
 		except:
-			print 'Invalid suit'
+			print('Invalid suit')
 			return None
 
 		cardRank = card[0:len(card)-1] # get rank from string
@@ -77,26 +76,26 @@ class Hand:
 			pass
 
 		# convert rank to int
-		if cardRank == "J":
+		if(cardRank == "J"):
 			cardRank = 11
-		elif cardRank == "Q":
+		elif(cardRank == "Q"):
 			cardRank = 12
-		elif cardRank == "K":
+		elif(cardRank == "K"):
 			cardRank = 13
-		elif cardRank == "A":
+		elif(cardRank == "A"):
 			cardRank = 14
 		else:
 			try:
 				cardRank = int(cardRank)
 			except:
-				print "Invalid card rank."
+				print("Invalid card rank.")
 				return None
 
 		return cardRank, suitIden
 
 	def containsCard(self, cardRank, suitIden):
 		for card in self.hand[suitIden]:
-			if card.rank.rank == cardRank:
+			if(card.rank.rank == cardRank):
 				cardToPlay = card
 					
 				# remove cardToPlay from hand
@@ -110,7 +109,7 @@ class Hand:
 	def playCard(self, card):
 		cardInfo = self.strToCard(card)
 
-		if cardInfo is None:
+		if(cardInfo is None):
 			return None
 		else:
 			cardRank, suitIden = cardInfo[0], cardInfo[1]
@@ -121,16 +120,16 @@ class Hand:
 	def removeCard(self, card):
 		suitId = card.suit.iden
 		for c in self.hand[suitId]:
-			if c == card:
-				if suitId == clubs and card.rank.rank == 2:
+			if(c == card):
+				if(suitId == clubs and card.rank.rank == 2):
 					self.contains2ofclubs = False
 				# print "Removing:", c.__str__()
 				self.hand[card.suit.iden].remove(c)
 				self.updateHand()
 
 	def hasOnlyHearts(self):
-		print "len(self.hearts):",len(self.hearts)
-		print "self.size():",self.size()
+		print("len(self.hearts):",len(self.hearts))
+		print("self.size():",self.size())
 		return len(self.hearts) == self.size()
 
 

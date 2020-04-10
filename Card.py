@@ -45,12 +45,12 @@ class Suit:
 		self.iden = iden
 		self.string = ''
 		suits = ["c", "d", "s", "h"]
-		if iden == -1:
+		if(iden == -1):
 			self.string = "Unset"
-		elif iden <= 3:
+		elif(iden <= 3):
 			self.string = suits[iden]
 		else:
-			print 'Invalid card identifier'
+			print('Invalid card identifier')
 
 	def __eq__(self, other):
 		return self.iden == other.iden
@@ -86,12 +86,12 @@ class Rank:
 
 		strings = ["J", "Q", "K", "A"]
 
-		if rank >= 2 and rank <= 10:
+		if(rank >= 2 and rank <= 10):
 			self.string = str(rank)
-		elif rank > 10 and rank <= 14:
+		elif(rank > 10 and rank <= 14):
 			self.string = strings[rank - 11]
 		else:
-			print 'Invalid rank identifier'
+			print('Invalid rank identifier')
 
 	def __lt__(self, other):
 		return self.rank < other.rank

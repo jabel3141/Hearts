@@ -32,20 +32,20 @@ class Trick:
 		self.suit = card.suit
 
 	def addCard(self, card, index):
-		if self.cardsInTrick == 0: # if this is the first card added, set the trick suit
+		if(self.cardsInTrick == 0): # if this is the first card added, set the trick suit
 			self.setTrickSuit(card)
-			print 'Current trick suit:', self.suit
+			print('Current trick suit:', self.suit)
 		
 		self.trick[index] = card
 		self.cardsInTrick += 1
 
-		if card.suit == Suit(hearts):
+		if(card.suit == Suit(hearts)):
 			self.points += 1
-		elif card == Card(queen, spades):
+		elif(card == Card(queen, spades)):
 			self.points += 13
 
-		if card.suit == self.suit:
-			if card.rank.rank > self.highest:
+		if(card.suit == self.suit):
+			if(card.rank.rank > self.highest):
 				self.highest = card.rank.rank
 				self.winner = index
-				print "Highest:",self.highest
+				print("Highest:",self.highest)

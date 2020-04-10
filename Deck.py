@@ -31,5 +31,5 @@ class Deck:
 	def size(self):
 		return len(self.deck)
 
-	def addCards(cards):
+	def addCards(self, cards):
 		self.deck += cards

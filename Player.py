@@ -13,18 +13,18 @@ class Player:
 
 	def getInput(self, option):
 		card = None
-		while card is None:
-			card = raw_input(self.name + ", select a card to " + option + ": ")
+		while(card is None):
+			card = input(self.name + ", select a card to " + option + ": ")
 		return card
 
 	def play(self, option='play', c=None, auto=False):
-		if auto:
+		if(auto):
 			card = self.hand.getRandomCard()
-		elif c is None:
+		elif(c is None):
 			card = self.getInput(option)
 		else:
 			card = c
-		if not auto:
+		if(not auto):
 			card = self.hand.playCard(card)
 		return card
 
