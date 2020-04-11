@@ -39,7 +39,6 @@ Suit identification (iden)
 
 The suit that leads is trump, aces are high
 '''
-
 class Suit:
 	def __init__(self, iden):
 		self.iden = iden
@@ -72,7 +71,6 @@ class Suit:
 
 	def __str__(self):
 		return self.string
-
 
 
 '''
@@ -113,5 +111,3 @@ class Rank:
 
 	def __str__(self):
 		return self.string
-
-

@@ -9,7 +9,6 @@ suits = ["c", "d", "s", "h"]
 
 class Hand:
 	def __init__(self):
-
 		self.clubs = []
 		self.diamonds = []
 		self.spades = []
@@ -17,11 +16,12 @@ class Hand:
 		
 		# create hand of cards split up by suit
 		self.hand = [self.clubs, self.diamonds, self.spades, self.hearts]
-
 		self.contains2ofclubs = False
+
 
 	def size(self):
 		return len(self.clubs) + len(self.diamonds) + len(self.spades) + len(self.hearts)
+
 
 	def addCard(self, card):
 		if(card.suit == Suit(clubs)):
@@ -41,8 +41,10 @@ class Hand:
 			for suit in self.hand:
 				suit.sort()
 
+
 	def updateHand(self):
 		self.hand = [self.clubs, self.diamonds, self.spades, self.hearts]
+
 
 	def getRandomCard(self):
 		suit = randint(0,3)
@@ -53,7 +55,6 @@ class Hand:
 		index = randint(0, len(suit)-1)
 
 		return suit[index]
-
 
 
 	def strToCard(self, card):
@@ -93,6 +94,7 @@ class Hand:
 
 		return cardRank, suitIden
 
+
 	def containsCard(self, cardRank, suitIden):
 		for card in self.hand[suitIden]:
 			if(card.rank.rank == cardRank):
@@ -106,6 +108,7 @@ class Hand:
 				return cardToPlay
 		return None
 
+
 	def playCard(self, card):
 		cardInfo = self.strToCard(card)
 
@@ -117,21 +120,19 @@ class Hand:
 		# see if player has that card in hand
 		return self.containsCard(cardRank, suitIden)
 
+
 	def removeCard(self, card):
 		suitId = card.suit.iden
 		for c in self.hand[suitId]:
 			if(c == card):
 				if(suitId == clubs and card.rank.rank == 2):
 					self.contains2ofclubs = False
-				# print "Removing:", c.__str__()
 				self.hand[card.suit.iden].remove(c)
 				self.updateHand()
 
-	def hasOnlyHearts(self):
-		print("len(self.hearts):",len(self.hearts))
-		print("self.size():",self.size())
-		return len(self.hearts) == self.size()
 
+	def hasOnlyHearts(self):
+		return len(self.hearts) == self.size()
 
 
 	def __str__(self):
@@ -140,5 +141,3 @@ class Hand:
 			for card in suit:
 				handStr += card.__str__() + ' '
 		return handStr
-
-

@@ -7,6 +7,7 @@ class Player:
 			self.score = 0
 			self.tricksWon = []
 
+
 	def addCard(self, card):
 		self.hand.addCard(card)
 
@@ -16,6 +17,7 @@ class Player:
 		while(card is None):
 			card = input(self.name + ", select a card to " + option + ": ")
 		return card
+
 
 	def play(self, option='play', c=None, auto=False):
 		if(auto):
@@ -36,11 +38,14 @@ class Player:
 	def hasSuit(self, suit):
 		return len(self.hand.hand[suit.iden]) > 0
 
+
 	def removeCard(self, card):
 		self.hand.removeCard(card)
 
+
 	def discardTricks(self):
 		self.tricksWon = []
+
 
 	def hasOnlyHearts(self):
 		return self.hand.hasOnlyHearts()

@@ -13,6 +13,7 @@ class Trick:
 		self.highest = 0 # rank of the high trump suit card in hand
 		self.winner = -1
 
+
 	def reset(self):
 		self.trick = [0, 0, 0, 0]
 		self.suit = -1
@@ -21,19 +22,14 @@ class Trick:
 		self.highest = 0
 		self.winner = -1
 
-	# def cardsInTrick(self):
-	# 	count = 0
-	# 	for card in self.trick:
-	# 		if card is not 0:
-	# 			count += 1
-	# 	return count
 
 	def setTrickSuit(self, card):
 		self.suit = card.suit
 
+
 	def addCard(self, card, index):
 		if(self.cardsInTrick == 0): # if this is the first card added, set the trick suit
-			self.setTrickSuit(card)
+			self.suit = card.suit
 			print('Current trick suit:', self.suit)
 		
 		self.trick[index] = card
@@ -48,4 +44,4 @@ class Trick:
 			if(card.rank.rank > self.highest):
 				self.highest = card.rank.rank
 				self.winner = index
-				print("Highest:",self.highest)
+				#print("Highest:",self.highest)
