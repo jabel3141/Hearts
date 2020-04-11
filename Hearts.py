@@ -141,14 +141,16 @@ class Hearts:
 		self.currentTrick = Trick()
 		print()
 
-
 	def getWinner(self):
 		minScore = 200  # impossibly high
-		winner = None
+		winner = []
 		for p in self.players:
 			if (p.score < minScore):
-				winner = p
+				winner = []
+				winner.append(p)
 				minScore = p.score
+			elif (p.score == minScore):
+				winner.append(p)
 		return winner
 
 
@@ -271,7 +273,14 @@ def main():
 			hearts.newRound()
 
 	print() # spacing
-	print(hearts.getWinner().name, "wins!")
+	winners = hearts.getWinner()
+	if(len(winners) > 1):
+		winnerString = ""
+		for w in range(len(winners)):
+			winnerString += w.name + " "
+		print(winnerString + "wins!")
+	else:
+		print(winners[0].name, "wins!")
 
 
 if __name__ == '__main__':
