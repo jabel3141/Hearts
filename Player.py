@@ -7,6 +7,7 @@ class Player:
 		self.hand = Hand()
 		self.score = 0
 		self.tricksWon = []
+		self.currentScore = 0
 		self.cardsPlayed = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 		self.passedCards = [0, 0, 0, 0] # last one is which player it was passed to
 
@@ -38,6 +39,7 @@ class Player:
 		return card
 
 	def trickWon(self, trick):
+		self.currentScore += trick.points
 		self.score += trick.points
 
 	def hasSuit(self, suit):
@@ -45,6 +47,9 @@ class Player:
 
 	def removeCard(self, card):
 		self.hand.removeCard(card)
+
+	def clearCurrentScore(self):
+		self.currentScore = 0
 
 	def discardTricks(self):
 		self.tricksWon = []

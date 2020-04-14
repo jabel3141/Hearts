@@ -18,6 +18,6 @@ class AIInfo:
         tempScores = []
 
         for aPlayer in self.players:
-            tempScores.append(aPlayer.handScore)
+            tempScores.append(aPlayer.currenScore)
 
         return tempScores
