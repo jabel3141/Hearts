@@ -52,6 +52,19 @@ class Hearts:
 	def handleScoring(self):
 		p, highestScore = None, 0
 		print("\n=====Scores=====")
+
+		tempScores = []
+
+		for aPlayer in self.players:
+			tempScores.append(aPlayer.currentScore)
+
+		if 26 in tempScores:
+			player_shoot = tempScores.index(26)
+			for i, player in enumerate(self.players):
+				if i != player_shoot:
+					player.score += 26
+
+
 		for i, player in enumerate(self.players):
 			print(player.name + ": " + str(player.score))
 			self.scoreboard[i] = player.score

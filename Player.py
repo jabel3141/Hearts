@@ -40,7 +40,7 @@ class Player:
 
 	def trickWon(self, trick):
 		self.currentScore += trick.points
-		self.score += trick.points
+		# self.score += trick.points
 
 	def hasSuit(self, suit):
 		return len(self.hand.hand[suit.iden]) > 0
