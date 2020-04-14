@@ -54,7 +54,7 @@ class Hearts:
         print("\n=====Scores=====")
         for i, player in enumerate(self.players):
             print(player.name + ": " + str(player.score))
-            self.scoreboard[i] += player.score
+            self.scoreboard[i] = player.score
             if player.score > highestScore:
                 p = player
                 highestScore = player.score
