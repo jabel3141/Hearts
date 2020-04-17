@@ -109,7 +109,7 @@ class Hand:
 		return None
 
 
-	def playCard(self, card):
+	def str_to_card(self, card):
 		cardInfo = self.strToCard(card)
 
 		if(cardInfo is None):

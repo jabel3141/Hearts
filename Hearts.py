@@ -1,6 +1,7 @@
 from Deck import Deck
 from Card import Card, Suit, Rank
-from Player import Player
+from RandomAI import RandomAI
+from HumanAI import HumanAI
 from Trick import Trick
 from AIInfo import AIInfo
 
@@ -11,7 +12,6 @@ When auto is True, passing is disabled and the computer plays the
 game by "guess and check", randomly trying moves until it finds a
 valid one.
 '''
-auto = True
 totalTricks = 13
 maxScore = 100
 queen = 12
@@ -36,7 +36,7 @@ class Hearts:
 		self.scoreboard = [0, 0, 0, 0]
 
 		# Make four players
-		self.players = [Player("Jason"), Player("Jack"), Player("Sam"), Player("JB")]
+		self.players = [RandomAI("Jason"), RandomAI("Jack"), RandomAI("Sam"), RandomAI("JB")]
 
 		'''
 		Player physical locations:
@@ -98,17 +98,18 @@ class Hearts:
 			i += 1
 
 	def passCards(self, index):
-		passTo = self.passes[self.roundNum]  # how far to pass cards
+		passTo = self.passes[(self.roundNum - 1) % 4]  # how far to pass cards
 		passTo = (index + passTo) % len(self.players)  # the index to which cards are passed
-		while len(self.passingCards[passTo]) < cardsToPass:  # pass three cards
+
+		for i in range(cardsToPass):
 			passCard = None
 			while passCard is None:  # make sure string passed is valid
-				passCard = self.players[index].play(option='pass', passDistance=passTo,
-													numPassed=len(self.passCards[passTo]))
+				passCard = self.players[index].pass_cards(passTo, i)
 				if passCard is not None:
 					# remove card from player hand and add to passed cards
 					self.passingCards[passTo].append(passCard)
 					self.players[index].removeCard(passCard)
+
 		print(self.players[index].name + " is passing " + self.printPassingCards(passTo) + " to " + self.players[
 			passTo].name)
 
@@ -125,8 +126,7 @@ class Hearts:
 		return out
 
 	def playersPassCards(self):
-
-		if not self.trickNum % 4 == 3:  # don't pass every fourth hand
+		if self.roundNum % 4 != 0:  # Don't pass on round 4
 			print("All player's hands before passing")
 			self.printPlayers()
 
@@ -134,7 +134,7 @@ class Hearts:
 				print()  # spacing
 				curPlayer = self.players[i]
 				print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
-				self.passCards(i % len(self.players))
+				self.passCards(i)
 
 			self.distributePassedCards()
 			print()
@@ -172,7 +172,7 @@ class Hearts:
 		shift = 0
 		if self.trickNum == 0:
 			startPlayer = self.players[start]
-			playedCard = startPlayer.play(option="play", c='2c')
+			playedCard = startPlayer.play(c='2c')
 			startPlayer.removeCard(playedCard)
 
 			self.currentTrick.addCard(playedCard, start)
@@ -192,7 +192,7 @@ class Hearts:
 
 			while playedCard is None:  # wait until a valid card is passed
 
-				playedCard = curPlayer.play(auto=auto, trickNum=self.trickNum)  # change auto to False to play manually
+				playedCard = curPlayer.play(trick_num=self.trickNum)  # change auto to False to play manually
 
 				# the rules for what cards can be played
 				# card set to None if it is found to be invalid
@@ -270,8 +270,7 @@ def main():
 
 		while hearts.trickNum < totalTricks:
 			if hearts.trickNum == 0:
-				if not auto:
-					hearts.playersPassCards()
+				hearts.playersPassCards()
 				hearts.getFirstTrickStarter()
 			print('\n==========Trick number ' + str(hearts.trickNum + 1) + '==========')
 			hearts.playTrick(hearts.trickWinner)
