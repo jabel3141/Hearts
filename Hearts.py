@@ -63,6 +63,9 @@ class Hearts:
 			for i, player in enumerate(self.players):
 				if i != player_shoot:
 					player.score += 26
+		else:
+			for a_player in self.players:
+				a_player.score += a_player.currentScore
 
 
 		for i, player in enumerate(self.players):
