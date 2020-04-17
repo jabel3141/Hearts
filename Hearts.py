@@ -286,13 +286,10 @@ def main():
 
 	print()  # spacing
 	winners = hearts.getWinner()
-	if len(winners) > 1:
-		winnerString = ""
-		for w in range(len(winners)):
-			winnerString += w.name + " "
-		print(winnerString + "wins!")
-	else:
-		print(winners[0].name, "wins!")
+	winnerString = ""
+	for w in winners:
+		winnerString += w.name + " "
+	print(winnerString + "wins!")
 
 
 if __name__ == '__main__':
