@@ -4,6 +4,7 @@ from RandomAI import RandomAI
 from HumanAI import HumanAI
 from Trick import Trick
 from AIInfo import AIInfo
+from SimpleNN import SimpleNN
 
 '''
 Change auto to False if you would like to play the game manually.
@@ -36,7 +37,7 @@ class Hearts:
 		self.scoreboard = [0, 0, 0, 0]
 
 		# Make four players
-		self.players = [RandomAI("Jason"), RandomAI("Jack"), RandomAI("Sam"), RandomAI("JB")]
+		self.players = [RandomAI("Jason"), SimpleNN("Jack"), RandomAI("Sam"), RandomAI("JB")]
 
 		'''
 		Player physical locations:
@@ -188,11 +189,11 @@ class Hearts:
 			print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
 			playedCard = None
 
-			important_info = AIInfo(i, self.scoreboard, self.currentTrick, self.players)
+			important_info = AIInfo(curPlayerIndex, self.currentTrick, self.players)
 
 			while playedCard is None:  # wait until a valid card is passed
 
-				playedCard = curPlayer.play(trick_num=self.trickNum)  # change auto to False to play manually
+				playedCard = curPlayer.play(trick_num=self.trickNum, game_info=important_info)  # change auto to False to play manually
 
 				# the rules for what cards can be played
 				# card set to None if it is found to be invalid

@@ -108,6 +108,12 @@ class Hand:
 				return cardToPlay
 		return None
 
+	def hasCard(self, cardRank, suitIden):
+		for card in self.hand[suitIden]:
+			if (card.rank.rank == cardRank):
+
+				return True
+		return False
 
 	def str_to_card(self, card):
 		cardInfo = self.strToCard(card)

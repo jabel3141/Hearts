@@ -32,9 +32,9 @@ class Player:
 	def select_pass_card(self):
 		pass
 
-	def play(self, c=None, trick_num=0):
+	def play(self, c=None, heartsBroken = False, trick_num=0, game_info=None):
 		if c is None:
-			card = self.select_play_card()
+			card = self.select_play_card(heartsBroken, trick_num, game_info)
 		else:
 			card = c
 			card = self.hand.str_to_card(card)
@@ -42,7 +42,7 @@ class Player:
 		self.cardsPlayed[trick_num] = card
 		return card
 
-	def select_play_card(self):
+	def select_play_card(self, heartsBroken = False, trick_num=0, game_info=None):
 		pass
 
 	def trickWon(self, trick):
@@ -62,3 +62,16 @@ class Player:
 
 	def hasOnlyHearts(self):
 		return self.hand.hasOnlyHearts()
+
+	def hasPlayed(self, cardRank, suitIden):
+		for card in self.cardsPlayed:
+			if not type(card) == int:
+				if (card.rank.rank == cardRank) and (card.suit.iden == suitIden):
+					return True
+		return False
+
+	def hasPassed(self, cardRank, suitIden):
+		for card in self.passedCards[:-1]:
+			if (card.rank.rank == cardRank) and (card.suit.iden == suitIden):
+				return True
+		return False
