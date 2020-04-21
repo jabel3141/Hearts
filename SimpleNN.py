@@ -8,9 +8,8 @@ class SimpleNN(Player):
         self.play_policy = play_nn()
         # pass_policy = pass_nn()
 
-    def select_play_card(self, heartsBroken=False, trick_num=0, game_info=None):
-        card = self.play_policy.predict(heartsBroken, trick_num, game_info)
-        return card
+    def select_play_card(self, game_state):
+        return self.play_policy.predict(game_state)
 
     def select_pass_card(self):
         return self.hand.getRandomCard()

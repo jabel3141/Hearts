@@ -15,12 +15,12 @@ class Player:
 		self.cardsPlayed = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 		self.passedCards = [0, 0, 0, 0] # last one is which player it was passed to
 
-	def addCard(self, card):
-		self.hand.addCard(card)
+	def add_card(self, card):
+		self.hand.add_card(card)
 
-	def getInput(self, option):
+	def get_input(self, option):
 		card = None
-		while (card is None):
+		while card is None:
 			card = input(self.name + ", select a card to " + option + ": ")
 		return card
 
@@ -33,26 +33,53 @@ class Player:
 	def select_pass_card(self):
 		pass
 
-	def play(self, c=None, heartsBroken = False, trick_num=0, game_info=None):
+	def play(self, game_state, c=None):
 		if c is None:
-			card = self.select_play_card(heartsBroken, trick_num, game_info)
+			card = self.select_play_card(game_state)
 		else:
 			card = c
 
-		self.cardsPlayed[trick_num] = card
+		self.cardsPlayed[game_state.trick.trick_num] = card
 		return card
 
-	def select_play_card(self, heartsBroken = False, trick_num=0, game_info=None):
+	def select_play_card(self, game_state):
 		pass
+
+	def legal_plays(self, game_state):
+		if game_state.trick.suit == 'x':
+			if game_state.trick.trick_num == 0:  # first trick has not started
+				if self.hand.hasCard('2c'):
+					return ['2c']
+				print('You are going first but don\'t have the 2 of clubs?')
+				return []
+			elif not game_state.hearts_broken:
+				return self.hand.clubs + self.hand.diamonds + self.hand.spades  # all but hearts
+			else:
+				return self.hand.clubs + self.hand.diamonds + self.hand.spades + self.hand.hearts  # all cards
+		elif self.has_suit(game_state.trick.suit):
+			return self.hand.hand[Deck.suit_index(game_state.trick.suit)]  # Cards of the trick's suit
+		elif game_state.trick.trick_num == 0:
+			legal = self.hand.clubs + self.hand.diamonds + self.hand.spades
+			if 'Qs' in legal:
+				legal.remove('Qs')
+			if len(legal) > 0:
+				return legal  # no points on the first hand if possible
+			else:
+				return self.hand.clubs + self.hand.diamonds + self.hand.spades + self.hand.hearts  # all cards
+		else:
+			return self.hand.clubs + self.hand.diamonds + self.hand.spades + self.hand.hearts  # all cards
 
 	def trickWon(self, trick):
 		self.currentScore += trick.points
 
 	def has_suit(self, suit):
-		return len(self.hand.hand[Deck.suit_index(suit)]) > 0
+		if suit == 'x':
+			return False
+		else:
+			return len(self.hand.hand[Deck.suit_index(suit)]) > 0
 
 	def removeCard(self, card):
-		self.hand.removeCard(card)
+		self.hand.remove_card(card)
 
 	def clearCurrentScore(self):
 		self.currentScore = 0

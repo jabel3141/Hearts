@@ -3,8 +3,6 @@ from keras.layers import Dense, Input, Maximum
 from keras.backend import argmax
 from keras.optimizers import SGD, Adam
 import numpy as np
-import AIInfo
-from collections import deque
 
 from Deck import Deck
 
@@ -115,7 +113,7 @@ class play_nn():
         # make all numbers between 0 and 1
         nn_input = np.true_divide(nn_input, 8)
 
-        trick = game_info.currentTrick.trick
+        trick = game_info.trick
 
         # fill in what the trick looks like so far, 0 it has not been played, value is the card value
         for i in range(4):
@@ -134,9 +132,8 @@ class play_nn():
 
         return nn_input
 
-    def make_legal_layer(self, me, hb, tn, suit_lead):
-
-        # diagnol matrix: 1 if legal 0 if not
+    def make_legal_layer(self, me, game_state):
+        # diagonal matrix: 1 if legal 0 if not
         legal_plays = np.zeros((1, 52, 52))
 
         # 1 if legal 0 if not
@@ -144,41 +141,11 @@ class play_nn():
 
         a_deck = Deck().deck
 
-        my_hand = me.hand
+        legal = me.legal_plays(game_state)
         for i, a_card in enumerate(a_deck):
-            suit = a_card[-1:]
-            rank = a_card[:-1]
-            # we have the 2 of clubs
-            if a_card == '2c' and my_hand.hasCard(a_card):
+            if a_card in legal:
                 legal_plays[0, i, i] = 1
                 loss_legal_plays[i] = 1
-            # we don't have the 2 of clubs
-            else:
-                try:
-                    # we have the suit that was lead
-                    if me.has_suit(suit_lead):
-                        if my_hand.hasCard(a_card) and suit == suit_lead:
-                            legal_plays[0, i, i] = 1
-                            loss_legal_plays[i] = 1
-
-                    # we don't have the suit lead
-                    else:
-                        # it's the first trick we cannot play hearts
-                        if tn == 0:
-                            if my_hand.hasCard(a_card) and suit != 'h':
-                                legal_plays[0, i, i] = 1
-                                loss_legal_plays[i] = 1
-                        else:
-                            if my_hand.hasCard(a_card):
-                                legal_plays[0, i, i] = 1
-                                loss_legal_plays[i] = 1
-                # we are leading
-                except:
-                    if my_hand.hasCard(a_card):
-                        # leading hearts
-                        if suit != 'h' or hb:
-                            legal_plays[0, i, i] = 1
-                            loss_legal_plays[i] = 1
         # store values for later loss
         self.legal_loss_plays = loss_legal_plays
         return legal_plays
@@ -189,18 +156,17 @@ class play_nn():
         one_pred = argmax(prediction)
         suit = int(one_pred / 13)
         rank = int((one_pred % 13))
-        print(Deck.index_to_suit(suit), Deck.index_to_rank(rank))
         return Deck.index_to_rank(rank) + Deck.index_to_suit(suit)
 
     # game_info is of class AIInfo
-    def predict(self, heartsBroken = False, trick_num=0, game_info=None):
-        nn_input = self.make_input(game_info)
+    def predict(self, game_state):
+        nn_input = self.make_input(game_state)
 
         self.inputs.append(nn_input)
         # TODO make sure that this is the correct hand
-        me = game_info.players[game_info.playerPos]
+        me = game_state.players[game_state.playerPos]
         layer = self.model.get_layer('legal_moves')
-        legal_weights = self.make_legal_layer(me, heartsBroken, trick_num,  game_info.currentTrick.suit)
+        legal_weights = self.make_legal_layer(me, game_state)
         layer.set_weights(legal_weights)
         nn_input = nn_input.reshape(1,64)
         prediction = self.model.predict(nn_input)

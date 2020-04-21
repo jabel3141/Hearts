@@ -6,8 +6,9 @@ queen = 12
 
 
 class Trick:
-	def __init__(self):
+	def __init__(self, trick_num):
 		self.trick = [0, 0, 0, 0]
+		self.trick_num = trick_num
 		self.suit = 'x'
 		self.cardsInTrick = 0
 		self.points = 0

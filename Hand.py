@@ -21,7 +21,7 @@ class Hand:
 	def size(self):
 		return len(self.clubs) + len(self.diamonds) + len(self.spades) + len(self.hearts)
 
-	def addCard(self, card):
+	def add_card(self, card):
 		suit = card[-1:]
 		rank = card[:-1]
 		if suit == 'c':
@@ -38,9 +38,6 @@ class Hand:
 		if self.size() == 13:
 			for suit in self.hand:
 				suit.sort()
-
-	def updateHand(self):
-		self.hand = [self.clubs, self.diamonds, self.spades, self.hearts]
 
 	def getRandomCard(self):
 		suit = randint(0,3)
@@ -60,9 +57,8 @@ class Hand:
 				return True
 		return False
 
-	def removeCard(self, card):
+	def remove_card(self, card):
 		suit = card[-1:]
-		rank = card[:-1]
 
 		suit_index = Deck.suit_index(suit)
 		if suit_index is None:
@@ -72,7 +68,6 @@ class Hand:
 		for c in self.hand[suit_index]:
 			if c == card:
 				self.hand[suit_index].remove(c)
-				self.updateHand()
 
 	def hasOnlyHearts(self):
 		return len(self.hearts) == self.size()
