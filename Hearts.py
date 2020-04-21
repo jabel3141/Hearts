@@ -1,5 +1,4 @@
 from Deck import Deck
-from Card import Card, Suit, Rank
 from RandomAI import RandomAI
 from HumanAI import HumanAI
 from Trick import Trick
@@ -144,7 +143,7 @@ class Hearts:
 
 	def getFirstTrickStarter(self):
 		for i, p in enumerate(self.players):
-			if p.hand.contains2ofclubs:
+			if p.hand.hasCard('2c'):
 				self.trickWinner = i
 
 	def evaluateTrick(self):
@@ -173,10 +172,11 @@ class Hearts:
 		shift = 0
 		if self.trickNum == 0:
 			startPlayer = self.players[start]
-			playedCard = startPlayer.play(c='2c')
-			startPlayer.removeCard(playedCard)
+			played_card = startPlayer.play(c='2c')
+			print(played_card)
+			startPlayer.removeCard(played_card)
 
-			self.currentTrick.addCard(playedCard, start)
+			self.currentTrick.add_card(played_card, start)
 
 			shift = 1  # alert game that first player has already played
 
@@ -187,57 +187,59 @@ class Hearts:
 			curPlayerIndex = i % len(self.players)
 			curPlayer = self.players[curPlayerIndex]
 			print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
-			playedCard = None
+			played_card = None
 
 			important_info = AIInfo(curPlayerIndex, self.currentTrick, self.players)
 
-			while playedCard is None:  # wait until a valid card is passed
+			while played_card is None:  # wait until a valid card is passed
 
-				playedCard = curPlayer.play(trick_num=self.trickNum, game_info=important_info)  # change auto to False to play manually
+				played_card = curPlayer.play(trick_num=self.trickNum, game_info=important_info)
+				suit = played_card[-1:]
+				rank = played_card[:-1]
 
 				# the rules for what cards can be played
 				# card set to None if it is found to be invalid
-				if playedCard is not None:
+				if played_card is not None:
 
 					# if it is not the first trick and no cards have been played,
 					# set the first card played as the trick suit if it is not a heart
 					# or if hearts have been broken
 					if self.trickNum != 0 and self.currentTrick.cardsInTrick == 0:
-						if playedCard.suit == Suit(hearts) and not self.heartsBroken:
+						if suit == 'h' and not self.heartsBroken:
 							# if player only has hearts but hearts have not been broken,
 							# player can play hearts
 							if not curPlayer.hasOnlyHearts():
 								print("Hearts have not been broken.")
-								playedCard = None
+								played_card = None
 							else:
-								self.currentTrick.setTrickSuit(playedCard)
+								self.currentTrick.set_trick_suit(played_card)
 						else:
-							self.currentTrick.setTrickSuit(playedCard)
+							self.currentTrick.set_trick_suit(played_card)
 
 					# check if card played in first trick is not a heart or qs
 					if self.trickNum == 0:
-						if playedCard is not None:
-							if playedCard.suit == Suit(hearts):
+						if played_card is not None:
+							if suit == 'h':
 								print("Hearts cannot be played on the first hand.")
-								playedCard = None
-							elif playedCard.suit == Suit(spades) and playedCard.rank == Rank(queen):
+								played_card = None
+							elif suit == 's' and rank == 'Q':
 								print("The queen of spades cannot be played on the first hand.")
-								playedCard = None
+								played_card = None
 
 					# player tries to play off suit but has trick suit
-					if playedCard is not None and playedCard.suit != self.currentTrick.suit:
-						if curPlayer.hasSuit(self.currentTrick.suit):
+					if played_card is not None and suit != self.currentTrick.suit:
+						if curPlayer.has_suit(self.currentTrick.suit):
 							print("Must play the suit of the current trick.")
-							playedCard = None
-						elif playedCard.suit == Suit(hearts):
+							played_card = None
+						elif suit == 'h':
 							self.heartsBroken = True
 
-					if playedCard is not None:
-						if playedCard == Card(queen, spades):
+					if played_card is not None:
+						if rank == 'Q' and suit == 's':
 							self.heartsBroken = True
-						curPlayer.removeCard(playedCard)
+						curPlayer.removeCard(played_card)
 
-			self.currentTrick.addCard(playedCard, curPlayerIndex)
+			self.currentTrick.add_card(played_card, curPlayerIndex)
 
 		self.evaluateTrick()
 		self.trickNum += 1

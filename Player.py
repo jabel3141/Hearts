@@ -1,4 +1,5 @@
 from Hand import Hand
+from Deck import Deck
 
 
 class Player:
@@ -37,7 +38,6 @@ class Player:
 			card = self.select_play_card(heartsBroken, trick_num, game_info)
 		else:
 			card = c
-			card = self.hand.str_to_card(card)
 
 		self.cardsPlayed[trick_num] = card
 		return card
@@ -48,8 +48,8 @@ class Player:
 	def trickWon(self, trick):
 		self.currentScore += trick.points
 
-	def hasSuit(self, suit):
-		return len(self.hand.hand[suit.iden]) > 0
+	def has_suit(self, suit):
+		return len(self.hand.hand[Deck.suit_index(suit)]) > 0
 
 	def removeCard(self, card):
 		self.hand.removeCard(card)
@@ -63,15 +63,23 @@ class Player:
 	def hasOnlyHearts(self):
 		return self.hand.hasOnlyHearts()
 
-	def hasPlayed(self, cardRank, suitIden):
+	def has_played(self, played_card):
+		played_suit = played_card[-1:]
+		played_rank = played_card[:-1]
 		for card in self.cardsPlayed:
 			if not type(card) == int:
-				if (card.rank.rank == cardRank) and (card.suit.iden == suitIden):
+				suit = card[-1:]
+				rank = suit[:-1]
+				if rank == played_rank and suit == played_suit:
 					return True
 		return False
 
-	def hasPassed(self, cardRank, suitIden):
+	def has_passed(self, played_card):
+		played_suit = played_card[-1:]
+		played_rank = played_card[:-1]
 		for card in self.passedCards[:-1]:
-			if (card.rank.rank == cardRank) and (card.suit.iden == suitIden):
+			suit = card[-1:]
+			rank = suit[:-1]
+			if rank == played_rank and suit == played_suit:
 				return True
 		return False

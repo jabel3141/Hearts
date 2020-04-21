@@ -4,7 +4,6 @@ from keras.backend import argmax
 from keras.optimizers import SGD, Adam
 import numpy as np
 import AIInfo
-from Card import Card
 from collections import deque
 
 from Deck import Deck
@@ -73,38 +72,40 @@ class play_nn():
         # elements 0-51 represent one card in the deck, the value represents where the card is
         for i, a_card in enumerate(a_deck):
             # 1 if the card is in our hand
-            if my_hand.hasCard(a_card.rank.rank, a_card.suit.iden):
+            suit = a_card[-1:]
+            rank = a_card[:-1]
+            if my_hand.hasCard(a_card):
                 nn_input[i] = 1
 
             # 2 we played it
-            elif me.hasPlayed(a_card.rank.rank, a_card.suit.iden):
+            elif me.has_played(a_card):
                 nn_input[i] = 2
 
             # 3 passed to player 1
-            elif me.hasPassed(a_card.rank.rank, a_card.suit.iden):
+            elif me.has_passed(a_card):
                 if passed_to == 1:
                     nn_input[i] = 3
 
             # 4 player 1 played
-            elif player_1.hasPlayed(a_card.rank.rank, a_card.suit.iden):
+            elif player_1.has_played(a_card):
                 nn_input[i] = 4
 
             # 5 passed to player 2
-            elif me.hasPassed(a_card.rank.rank, a_card.suit.iden):
+            elif me.has_passed(a_card):
                 if passed_to == 2:
                     nn_input[i] = 5
 
             # 6 player 2 played
-            elif player_2.hasPlayed(a_card.rank.rank, a_card.suit.iden):
+            elif player_2.has_played(a_card):
                 nn_input[i] = 6
 
             # 7 passed to player 3
-            elif me.hasPassed(a_card.rank.rank, a_card.suit.iden):
+            elif me.has_passed(a_card):
                 if passed_to == 3:
                     nn_input[i] = 7
 
             # 8 player 3 played
-            elif player_3.hasPlayed(a_card.rank.rank, a_card.suit.iden):
+            elif player_3.has_played(a_card):
                 nn_input[i] = 8
 
             # 0 have not seen the card
@@ -145,18 +146,18 @@ class play_nn():
 
         my_hand = me.hand
         for i, a_card in enumerate(a_deck):
-            suit = a_card.suit
-            rank = a_card.rank.rank
+            suit = a_card[-1:]
+            rank = a_card[:-1]
             # we have the 2 of clubs
-            if my_hand.hasCard(2, 0) and (rank == 2) and suit == 0:
+            if a_card == '2c' and my_hand.hasCard(a_card):
                 legal_plays[0, i, i] = 1
                 loss_legal_plays[i] = 1
             # we don't have the 2 of clubs
             else:
                 try:
                     # we have the suit that was lead
-                    if me.hasSuit(suit_lead):
-                        if my_hand.hasCard(rank, suit.iden) and suit == suit_lead:
+                    if me.has_suit(suit_lead):
+                        if my_hand.hasCard(a_card) and suit == suit_lead:
                             legal_plays[0, i, i] = 1
                             loss_legal_plays[i] = 1
 
@@ -164,18 +165,18 @@ class play_nn():
                     else:
                         # it's the first trick we cannot play hearts
                         if tn == 0:
-                            if my_hand.hasCard(rank, suit.iden) and suit.iden != 3:
+                            if my_hand.hasCard(a_card) and suit != 'h':
                                 legal_plays[0, i, i] = 1
                                 loss_legal_plays[i] = 1
                         else:
-                            if my_hand.hasCard(rank, suit.iden):
+                            if my_hand.hasCard(a_card):
                                 legal_plays[0, i, i] = 1
                                 loss_legal_plays[i] = 1
                 # we are leading
                 except:
-                    if my_hand.hasCard(rank, suit.iden):
+                    if my_hand.hasCard(a_card):
                         # leading hearts
-                        if suit.iden != 3 or hb:
+                        if suit != 'h' or hb:
                             legal_plays[0, i, i] = 1
                             loss_legal_plays[i] = 1
         # store values for later loss
@@ -187,9 +188,9 @@ class play_nn():
         prediction = prediction[0].flatten()
         one_pred = argmax(prediction)
         suit = int(one_pred / 13)
-        rank = int((one_pred % 13) + 2)
-
-        return Card(rank, suit)
+        rank = int((one_pred % 13))
+        print(Deck.index_to_suit(suit), Deck.index_to_rank(rank))
+        return Deck.index_to_rank(rank) + Deck.index_to_suit(suit)
 
     # game_info is of class AIInfo
     def predict(self, heartsBroken = False, trick_num=0, game_info=None):
