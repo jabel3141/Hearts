@@ -1,6 +1,7 @@
 from Deck import Deck
 from RandomAI import RandomAI
 from HumanAI import HumanAI
+from SimpleAI import SimpleAI
 from Trick import Trick
 from GameState import GameState
 from SimpleNN import SimpleNN
@@ -36,7 +37,7 @@ class Hearts:
 		self.scoreboard = [0, 0, 0, 0]
 
 		# Make four players
-		self.players = [RandomAI("Jason"), SimpleNN("Jack"), RandomAI("Sam"), RandomAI("JB")]
+		self.players = [RandomAI("Jason"), SimpleNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
 
 		'''
 		Player physical locations:

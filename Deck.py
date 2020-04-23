@@ -17,7 +17,7 @@ class Deck:
 		return self.deck.pop(0)
 
 	def sort(self):
-		self.deck.sort()
+		self.deck.sort(key=Deck.card_to_sort_val)
 
 	def size(self):
 		return len(self.deck)
@@ -49,3 +49,16 @@ class Deck:
 	@staticmethod
 	def index_to_rank(idx):
 		return allRanks[idx]
+
+	@staticmethod
+	def card_to_sort_val(card):
+		suit = card[-1:]
+		rank = card[:-1]
+		val = 0
+		val += 100 * Deck.suit_index(suit)
+		return val + Deck.rank_index(rank)
+
+	@staticmethod
+	def card_rank_to_sort_val(card):
+		rank = card[:-1]
+		return Deck.rank_index(rank)

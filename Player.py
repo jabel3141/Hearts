@@ -53,7 +53,11 @@ class Player:
 				print('You are going first but don\'t have the 2 of clubs?')
 				return []
 			elif not game_state.hearts_broken:
-				return self.hand.clubs + self.hand.diamonds + self.hand.spades  # all but hearts
+				legal = self.hand.clubs + self.hand.diamonds + self.hand.spades  # All but hearts if possible
+				if len(legal) > 0:
+					return legal
+				else:
+					return self.hand.hearts
 			else:
 				return self.hand.clubs + self.hand.diamonds + self.hand.spades + self.hand.hearts  # all cards
 		elif self.has_suit(game_state.trick.suit):

@@ -37,7 +37,7 @@ class Hand:
 
 		if self.size() == 13:
 			for suit in self.hand:
-				suit.sort()
+				suit.sort(key=Deck.card_to_sort_val)
 
 	def getRandomCard(self):
 		suit = randint(0,3)
