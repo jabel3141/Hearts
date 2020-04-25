@@ -22,6 +22,7 @@ hearts = 3
 cardsToPass = 3
 
 
+
 class Hearts:
 	def __init__(self):
 		self.round_num = 0
@@ -37,7 +38,7 @@ class Hearts:
 		self.scoreboard = [0, 0, 0, 0]
 
 		# Make four players
-		self.players = [RandomAI("Jason"), SimpleNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
+		self.players = [SimpleAI("Jason"), SimpleNN("Jack"), SimpleAI("Sam"), SimpleAI("JB")]
 
 		'''
 		Player physical locations:
@@ -50,9 +51,27 @@ class Hearts:
 		# Generate a full deck of cards and shuffle it
 		self.newRound()
 
+	def reset(self):
+		self.round_num = 0
+		self.trick_num = 0  # initialization value such that first round is round 0
+		self.dealer = -1  # so that first dealer is 0
+		self.passes = [1, -1, 2, 0]  # left, right, across, no pass
+		self.currentTrick = Trick(self.trick_num)
+		self.trickWinner = -1
+		self.hearts_broken = False
+		self.losingPlayer = None
+		self.passingCards = [[], [], [], []]
+		# the score of the game
+		self.scoreboard = [0, 0, 0, 0]
+
+		for a_player in self.players:
+			a_player.reset()
+
+		self.newRound()
+
 	def handleScoring(self):
 		p, highestScore = None, 0
-		print("\n=====Scores=====")
+		# print("\n=====Scores=====")
 
 		tempScores = []
 
@@ -70,7 +89,7 @@ class Hearts:
 
 
 		for i, player in enumerate(self.players):
-			print(player.name + ": " + str(player.score))
+			# print(player.name + ": " + str(player.score))
 			self.scoreboard[i] = player.score
 			if player.score > highestScore:
 				p = player
@@ -111,8 +130,8 @@ class Hearts:
 					self.passingCards[passTo].append(passCard)
 					self.players[index].removeCard(passCard)
 
-		print(self.players[index].name + " is passing " + self.printPassingCards(passTo) + " to " + self.players[
-			passTo].name)
+		# print(self.players[index].name + " is passing " + self.printPassingCards(passTo) + " to " + self.players[
+		# 	passTo].name)
 
 	def distributePassedCards(self):
 		for i, passed in enumerate(self.passingCards):
@@ -128,19 +147,19 @@ class Hearts:
 
 	def playersPassCards(self):
 		if self.round_num % 4 != 0:  # Don't pass on round 4
-			print("All player's hands before passing")
-			self.printPlayers()
+			# print("All player's hands before passing")
+			# self.printPlayers()
 
 			for i in range(0, len(self.players)):
-				print()  # spacing
+				# print()  # spacing
 				curPlayer = self.players[i]
-				print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
+				# print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
 				self.passCards(i)
 
 			self.distributePassedCards()
-			print()
-			print("All player's hands after passing")
-			self.printPlayers()
+			# print()
+			# print("All player's hands after passing")
+			# self.printPlayers()
 
 	def getFirstTrickStarter(self):
 		for i, p in enumerate(self.players):
@@ -151,10 +170,11 @@ class Hearts:
 		self.trickWinner = self.currentTrick.winner
 		p = self.players[self.trickWinner]
 		p.trickWon(self.currentTrick)
-		self.printCurrentTrick()
-		print(p.name + " won the trick.")
-		# print 'Making new trick'
-		print()
+
+		# self.printCurrentTrick()
+		# print(p.name + " won the trick.")
+		# # print 'Making new trick'
+		# print()
 
 	def getWinner(self):
 		minScore = 200  # impossibly high
@@ -172,10 +192,10 @@ class Hearts:
 		# have each player take their turn
 		for i in range(start, start + len(self.players)):
 
-			self.printCurrentTrick()
+			# self.printCurrentTrick()
 			curPlayerIndex = i % len(self.players)
 			curPlayer = self.players[curPlayerIndex]
-			print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
+			# print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
 			played_card = None
 
 			game_state = GameState(curPlayerIndex, self.currentTrick, self.hearts_broken, self.players)
@@ -198,7 +218,7 @@ class Hearts:
 							# if player only has hearts but hearts have not been broken,
 							# player can play hearts
 							if not curPlayer.hasOnlyHearts():
-								print("Hearts have not been broken.")
+								# print("Hearts have not been broken.")
 								played_card = None
 							else:
 								self.currentTrick.set_trick_suit(played_card)

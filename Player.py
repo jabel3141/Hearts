@@ -15,6 +15,13 @@ class Player:
 		self.cardsPlayed = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 		self.passedCards = [0, 0, 0, 0] # last one is which player it was passed to
 
+	def reset(self):
+		self.score = 0
+		self.tricksWon = []
+		self.currentScore = 0
+		self.cardsPlayed = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		self.passedCards = [0, 0, 0, 0]  # last one is which player it was passed to
+
 	def add_card(self, card):
 		self.hand.add_card(card)
 
@@ -41,6 +48,9 @@ class Player:
 
 		self.cardsPlayed[game_state.trick.trick_num] = card
 		return card
+
+	def train(self, reward):
+		pass
 
 	def select_play_card(self, game_state):
 		pass

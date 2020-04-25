@@ -14,20 +14,34 @@ class play_nn():
         self.basic_input = Input((64,))
         self.x = Dense(256, activation='sigmoid')(self.basic_input)
         self.x = Dense(128, activation='sigmoid')(self.x)
+        self.x = Dense(128, activation='sigmoid')(self.x)
+        self.x = Dense(128, activation='sigmoid')(self.x)
         self.learn_legal = Dense(52, activation='sigmoid', name='learn_legal')(self.x)
 
         self.legal_moves = Dense(52, name='legal_moves', use_bias=False)(self.learn_legal)
 
-        self.model = Model(self.basic_input, [self.legal_moves, self.learn_legal])
+        self.model = Model(self.basic_input, self.legal_moves)
 
         # don't really know when this should happen
 
         self.model.compile(loss='mse', optimizer='adam')
 
+
+
         try:
-            self.model.load_weights('simple_play_weights.h5')
+            self.model.load_weights('q_model.h5')
         except:
-            print("weights do not exist")
+            print("either no file or wrong network structure, should be good next time")
+
+
+        # store to run again for the loss
+        self.last_input = None
+        self.last_legal = None
+        self.game_state = None
+        self.target = 0
+        # chance of exploring a random pick
+        self.odds_explore = .5
+        self.decay_factor = .999
 
         # used to store inputs for the model so we can do batch learning
         self.inputs = []
@@ -55,8 +69,6 @@ class play_nn():
 
         me = players[0]
         my_hand = me.hand
-        i_played = me.cardsPlayed
-        i_passed = me.passedCards[:3]
         player_1 = players[1]
         player_2 = players[2]
         player_3 = players[3]
@@ -147,13 +159,14 @@ class play_nn():
                 legal_plays[0, i, i] = 1
                 loss_legal_plays[i] = 1
         # store values for later loss
+        self.last_legal = loss_legal_plays
         self.legal_loss_plays = loss_legal_plays
         return legal_plays
 
-    @staticmethod
-    def convert_prediction_to_card(prediction):
+    def convert_prediction_to_card(self, prediction):
         prediction = prediction[0].flatten()
         one_pred = argmax(prediction)
+        self.target = one_pred
         suit = int(one_pred / 13)
         rank = int((one_pred % 13))
         return Deck.index_to_rank(rank) + Deck.index_to_suit(suit)
@@ -162,17 +175,30 @@ class play_nn():
     def predict(self, game_state):
         nn_input = self.make_input(game_state)
 
-        self.inputs.append(nn_input)
-        # TODO make sure that this is the correct hand
+        self.game_state = game_state
+        self.last_input = nn_input
         me = game_state.players[game_state.playerPos]
         layer = self.model.get_layer('legal_moves')
         legal_weights = self.make_legal_layer(me, game_state)
+
         layer.set_weights(legal_weights)
         nn_input = nn_input.reshape(1,64)
         prediction = self.model.predict(nn_input)
 
         return self.convert_prediction_to_card(prediction)
 
+    def train_predict(self, game_state):
+        nn_input = self.make_input(game_state)
+
+        # me = game_state.players[game_state.playerPos]
+        # layer = self.model.get_layer('legal_moves')
+        # legal_weights = self.make_legal_layer(me, game_state)
+        #
+        # layer.set_weights(legal_weights)
+        nn_input = nn_input.reshape(1, 64)
+        prediction = self.model.predict(nn_input)
+
+        return prediction
     # not sure how we are going to connect score from game to the network to keep gradient
     def train(self, scores):
         # best score is 0 so temporarily make list as long as scores of zeros
@@ -184,4 +210,4 @@ class play_nn():
                        epochs=1)
 
         # save the new weights to folder to bring up again
-        self.model.sample_weights('simple_play_weights.h5')
+

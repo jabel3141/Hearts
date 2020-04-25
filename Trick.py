@@ -26,12 +26,13 @@ class Trick:
 	def set_trick_suit(self, card):
 		self.suit = card[-1:]
 
+
 	def add_card(self, card, index):
 		suit = card[-1:]
 		rank = card[:-1]
 		if self.cardsInTrick == 0:  # if this is the first card added, set the trick suit
 			self.suit = suit
-			print('Current trick suit:', self.suit)
+			# print('Current trick suit:', self.suit)
 		
 		self.trick[index] = card
 		self.cardsInTrick += 1
