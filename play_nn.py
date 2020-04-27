@@ -18,9 +18,9 @@ class play_nn():
         self.x = Dense(128, activation='sigmoid')(self.x)
         self.learn_legal = Dense(52, activation='sigmoid', name='learn_legal')(self.x)
 
-        self.legal_moves = Dense(52, name='legal_moves', use_bias=False)(self.learn_legal)
+        # self.legal_moves = Dense(52, name='legal_moves', use_bias=False)(self.learn_legal)
 
-        self.model = Model(self.basic_input, self.legal_moves)
+        self.model = Model(self.basic_input, self.learn_legal)
 
         # don't really know when this should happen
 
@@ -47,7 +47,7 @@ class play_nn():
         self.inputs = []
 
         # can use if we want not completely needed
-        self.legal_loss_plays = []
+        self.legal_loss_play = []
 
     @staticmethod
     def rotate(players, num_rotate):
@@ -160,7 +160,7 @@ class play_nn():
                 loss_legal_plays[i] = 1
         # store values for later loss
         self.last_legal = loss_legal_plays
-        self.legal_loss_plays = loss_legal_plays
+        self.legal_loss_play = loss_legal_plays
         return legal_plays
 
     def convert_prediction_to_card(self, prediction):
@@ -178,10 +178,10 @@ class play_nn():
         self.game_state = game_state
         self.last_input = nn_input
         me = game_state.players[game_state.playerPos]
-        layer = self.model.get_layer('legal_moves')
+        # layer = self.model.get_layer('legal_moves')
         legal_weights = self.make_legal_layer(me, game_state)
 
-        layer.set_weights(legal_weights)
+        # layer.set_weights(legal_weights)
         nn_input = nn_input.reshape(1,64)
         prediction = self.model.predict(nn_input)
 
