@@ -19,18 +19,18 @@ class Hearts_env:
         if player_pos == player_won:
             # player shot the moon
             if self.hearts_game.players[player_won].currentScore == 26:
-                reward = 26/26
+                reward = 26
 
             else:
-                reward = (13 - self.hearts_game.currentTrick.points)/26
+                reward = (13 - self.hearts_game.currentTrick.points)
 
         # player lost the trick, but the winner shot the moon
         elif self.hearts_game.players[player_won].currentScore == 26:
-            reward = 0/26
+            reward = 0
 
         # player lost the trick they scored zero
         else:
-            reward = 13/26
+            reward = 13
 
         return reward
 

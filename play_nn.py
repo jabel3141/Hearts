@@ -7,16 +7,44 @@ import numpy as np
 from Deck import Deck
 
 
+def from_card_to_target(card):
+    suit = card[-1:]
+    rank = card[:-1]
+
+    suit_num = 0
+    if suit == 'c':
+        suit_num = 0
+    elif suit == 'd':
+        suit_num = 1
+    elif suit == 's':
+        suit_num = 2
+    elif suit == 'h':
+        suit_num = 3
+
+    if rank == "J":
+        rank_num = 11
+    elif rank == "Q":
+        rank_num = 12
+    elif rank == "K":
+        rank_num = 13
+    elif rank == "A":
+        rank_num = 14
+    else:
+        rank_num = int(rank)
+
+    target_val = suit_num * 13 + rank_num - 1
+
+    return target_val
+
+
 class play_nn():
 
     def __init__(self):
         # TODO fix input shape to be the correct size and paly with netowrk shape
         self.basic_input = Input((64,))
-        self.x = Dense(256, activation='sigmoid')(self.basic_input)
-        self.x = Dense(128, activation='sigmoid')(self.x)
-        self.x = Dense(128, activation='sigmoid')(self.x)
-        self.x = Dense(128, activation='sigmoid')(self.x)
-        self.learn_legal = Dense(52, activation='sigmoid', name='learn_legal')(self.x)
+        self.x = Dense(256, activation='relu')(self.basic_input)
+        self.x = Dense(128, activation='relu')(self.x)
+        self.learn_legal = Dense(52, activation='relu', name='learn_legal')(self.x)
 
         # self.legal_moves = Dense(52, name='legal_moves', use_bias=False)(self.learn_legal)
 
@@ -130,8 +158,8 @@ class play_nn():
         # fill in what the trick looks like so far, 0 it has not been played, value is the card value
         for i in range(4):
             try:
-                card_played = trick[i]
-                card_val = (4 * card_played.suit + 13 * card_played.rank) / 52
+                card_played = trick.trick[i]
+                card_val = from_card_to_target(card_played) / 52
                 nn_input[i + 52] = card_val
             except:
                 nn_input[i + 52] = 0
@@ -156,8 +184,8 @@ class play_nn():
         legal = me.legal_plays(game_state)
         for i, a_card in enumerate(a_deck):
             if a_card in legal:
-                legal_plays[0, i, i] = 1
-                loss_legal_plays[i] = 1
+                legal_plays[0, i, i] = 10
+                loss_legal_plays[i] = 10
         # store values for later loss
         self.last_legal = loss_legal_plays
         self.legal_loss_play = loss_legal_plays
@@ -175,7 +203,7 @@ class play_nn():
     def predict(self, game_state):
         nn_input = self.make_input(game_state)
 
-        self.game_state = game_state
+        self.game_state = game_state.__copy__()
         self.last_input = nn_input
         me = game_state.players[game_state.playerPos]
         # layer = self.model.get_layer('legal_moves')
