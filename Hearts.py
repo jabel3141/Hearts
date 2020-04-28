@@ -255,7 +255,6 @@ class Hearts:
 
 		self.evaluateTrick()
 		self.trick_num += 1
-		self.currentTrick = Trick(self.trick_num)
 
 	# print all players' hands
 	def printPlayers(self):
