@@ -5,6 +5,7 @@ from SimpleAI import SimpleAI
 from Trick import Trick
 from GameState import GameState
 from SimpleNN import SimpleNN
+from PolicyNN import PolicyNN
 
 '''
 Change auto to False if you would like to play the game manually.
@@ -38,7 +39,7 @@ class Hearts:
 		self.scoreboard = [0, 0, 0, 0]
 
 		# Make four players
-		self.players = [SimpleAI("Jason"), SimpleNN("Jack"), SimpleAI("Sam"), SimpleAI("JB")]
+		self.players = [SimpleAI("Jason"), PolicyNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
 
 		'''
 		Player physical locations:
@@ -255,7 +256,7 @@ class Hearts:
 
 		self.evaluateTrick()
 		self.trick_num += 1
-		self.currentTrick = Trick(self.trick_num)
+
 
 	# print all players' hands
 	def printPlayers(self):
