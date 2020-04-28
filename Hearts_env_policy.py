@@ -1,48 +1,35 @@
 from Hearts import Hearts
 from Trick import Trick
-import sys
+import os
 
 max_score = 100
 total_tricks = 13
 epochs = 100000
 
 
-class Hearts_env:
+class Hearts_env_policy:
 
     def __init__(self):
         self.hearts_game = Hearts()
+        os.makedirs('models/policy', exist_ok=True)
 
     def get_reward(self, player_pos):
-        # Todo build a better reward function
-        # 4 if no points taken
-        # -num points if points taken
-        #+/- 52 for shooting the moon
+        score = self.hearts_game.players[player_pos].currentScore
+        if score == 26:
+            return 78
+        opp_score = 0
+        for i, p in enumerate(self.hearts_game.players):
+            if p.currentScore == 26:
+                return -52
+            if i != player_pos:
+                opp_score += p.currentScore
 
-        player_won = self.hearts_game.currentTrick.winner
-
-        # player won the trick and adds the score they got
-        if player_pos == player_won:
-            # player shot the moon
-            if self.hearts_game.players[player_won].currentScore == 26:
-                reward = 52
-            elif self.hearts_game.currentTrick.points > 0:
-                reward = (-self.hearts_game.currentTrick.points)
-            else:
-                reward = 4
-
-        # player lost the trick, but the winner shot the moon
-        elif self.hearts_game.players[player_won].currentScore == 26:
-            reward = -52
-
-        # player lost the trick they scored zero
-        else:
-            reward = 4
-
+        reward = score * -4 + opp_score
         return reward
 
 
 def main():
-    trainer = Hearts_env()
+    trainer = Hearts_env_policy()
     tot_wins = 0
     sam_wins = 0
     jb_wins = 0
@@ -82,10 +69,6 @@ def main():
             if trainer.hearts_game.losingPlayer.score < max_score:
                 trainer.hearts_game.newRound()
 
-        print()
-        for a, player in enumerate(trainer.hearts_game.players):
-            print(player.name + ": " + str(player.score))
-        # spacing
         winners = trainer.hearts_game.getWinner()
         winnerString = ""
         for w in winners:
@@ -96,17 +79,23 @@ def main():
                 sam_wins += 1
             if w.name == "JB":
                 jb_wins += 1
-        print("Jack wins: ", tot_wins)
-        print("Sam wins: ", sam_wins)
-        print("JB wins: ", jb_wins)
-        print("num games: ", i)
-        print(winnerString + "wins!")
 
-        for i, player in enumerate(trainer.hearts_game.players):
-            try:
-                player.play_policy.save_model()
-            except:
-                pass
+        if i % 25 == 0:
+            print()
+            for a, player in enumerate(trainer.hearts_game.players):
+                print(player.name + ": " + str(player.score))
+            print("Jack wins: ", tot_wins)
+            print("Sam wins: ", sam_wins)
+            print("JB wins: ", jb_wins)
+            print("num games: ", i)
+            print(winnerString + "wins!")
+
+        if i % 50 == 0:
+            for player in trainer.hearts_game.players:
+                try:
+                    player.play_policy.save_model()
+                except:
+                    pass
 
         trainer.hearts_game.reset()
 

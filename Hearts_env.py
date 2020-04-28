@@ -1,5 +1,6 @@
 from Hearts import Hearts
 from Trick import Trick
+import os
 
 max_score = 100
 total_tricks = 13
@@ -10,30 +11,20 @@ class Hearts_env:
 
     def __init__(self):
         self.hearts_game = Hearts()
+        os.makedirs('models/qlearn', exist_ok=True)
 
     def get_reward(self, player_pos):
-        # Todo build a better reward function
+        score = self.hearts_game.players[player_pos].currentScore
+        if score == 26:
+            return 78
+        opp_score = 0
+        for i, p in enumerate(self.hearts_game.players):
+            if p.currentScore == 26:
+                return -52
+            if i != player_pos:
+                opp_score += p.currentScore
 
-        player_won = self.hearts_game.currentTrick.winner
-
-        # player won the trick and adds the score they got
-        if player_pos == player_won:
-            # player shot the moon
-            if self.hearts_game.players[player_won].currentScore == 26:
-
-                reward = 26*20
-
-            else:
-                reward = (13 - self.hearts_game.currentTrick.points)*20
-
-        # player lost the trick, but the winner shot the moon
-        elif self.hearts_game.players[player_won].currentScore == 26:
-            reward = 10
-
-        # player lost the trick they scored zero
-        else:
-            reward = 13 *20
-
+        reward = score * -4 + opp_score
         return reward
 
 
@@ -71,10 +62,6 @@ def main():
             if trainer.hearts_game.losingPlayer.score < max_score:
                 trainer.hearts_game.newRound()
 
-        print()
-        for a, player in enumerate(trainer.hearts_game.players):
-            print(player.name + ": " + str(player.score))
-        # spacing
         winners = trainer.hearts_game.getWinner()
         winnerString = ""
         for w in winners:
@@ -83,16 +70,22 @@ def main():
                 tot_wins += 1
             if w.name == "Sam":
                 sam_wins += 1
-        print("Jack wins: ", tot_wins)
-        print("Sam wins: ", sam_wins)
-        print("num games: ", i)
-        print(winnerString + "wins!")
 
-        for i, player in enumerate(trainer.hearts_game.players):
-            try:
-                player.play_policy.model.save_weights("q_model.h5")
-            except:
-                pass
+        if i % 25 == 0:
+            print()
+            for a, player in enumerate(trainer.hearts_game.players):
+                print(player.name + ": " + str(player.score))
+            print("Jack wins: ", tot_wins)
+            print("Sam wins: ", sam_wins)
+            print("num games: ", i)
+            print(winnerString + "wins!")
+
+        if i % 50 == 0:
+            for player in trainer.hearts_game.players:
+                try:
+                    player.play_policy.save_model()
+                except:
+                    pass
 
         trainer.hearts_game.reset()
 
