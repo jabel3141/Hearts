@@ -23,7 +23,6 @@ hearts = 3
 cardsToPass = 3
 
 
-
 class Hearts:
 	def __init__(self):
 		self.round_num = 0
@@ -35,11 +34,8 @@ class Hearts:
 		self.hearts_broken = False
 		self.losingPlayer = None
 		self.passingCards = [[], [], [], []]
-		# the score of the game
 		self.scoreboard = [0, 0, 0, 0]
-
-		# Make four players
-		self.players = [SimpleAI("Jason"), PolicyNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
+		self.verbose = False
 
 		'''
 		Player physical locations:
@@ -48,8 +44,7 @@ class Hearts:
 		p2		p4
 			p1
 		'''
-
-		# Generate a full deck of cards and shuffle it
+		self.players = [SimpleAI("Jason"), PolicyNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
 		self.newRound()
 
 	def reset(self):
@@ -62,7 +57,6 @@ class Hearts:
 		self.hearts_broken = False
 		self.losingPlayer = None
 		self.passingCards = [[], [], [], []]
-		# the score of the game
 		self.scoreboard = [0, 0, 0, 0]
 
 		for a_player in self.players:
@@ -72,7 +66,8 @@ class Hearts:
 
 	def handleScoring(self):
 		p, highestScore = None, 0
-		# print("\n=====Scores=====")
+		if self.verbose:
+			print("\n=====Scores=====")
 
 		tempScores = []
 
@@ -90,7 +85,8 @@ class Hearts:
 
 
 		for i, player in enumerate(self.players):
-			# print(player.name + ": " + str(player.score))
+			if self.verbose:
+				print(player.name + ": " + str(player.score))
 			self.scoreboard[i] = player.score
 			if player.score > highestScore:
 				p = player
@@ -131,8 +127,9 @@ class Hearts:
 					self.passingCards[passTo].append(passCard)
 					self.players[index].removeCard(passCard)
 
-		# print(self.players[index].name + " is passing " + self.printPassingCards(passTo) + " to " + self.players[
-		# 	passTo].name)
+		if self.verbose:
+			print(self.players[index].name + " is passing " + self.printPassingCards(passTo) + " to " + self.players[
+				passTo].name)
 
 	def distributePassedCards(self):
 		for i, passed in enumerate(self.passingCards):
@@ -148,19 +145,22 @@ class Hearts:
 
 	def playersPassCards(self):
 		if self.round_num % 4 != 0:  # Don't pass on round 4
-			# print("All player's hands before passing")
-			# self.printPlayers()
+			if self.verbose:
+				print("All player's hands before passing")
+				self.printPlayers()
 
 			for i in range(0, len(self.players)):
-				# print()  # spacing
-				curPlayer = self.players[i]
-				# print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
+				if self.verbose:
+					print()  # spacing
+					curPlayer = self.players[i]
+					print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
 				self.passCards(i)
 
 			self.distributePassedCards()
-			# print()
-			# print("All player's hands after passing")
-			# self.printPlayers()
+			if self.verbose:
+				print()
+				print("All player's hands after passing")
+				self.printPlayers()
 
 	def getFirstTrickStarter(self):
 		for i, p in enumerate(self.players):
@@ -172,10 +172,10 @@ class Hearts:
 		p = self.players[self.trickWinner]
 		p.trickWon(self.currentTrick)
 
-		# self.printCurrentTrick()
-		# print(p.name + " won the trick.")
-		# # print 'Making new trick'
-		# print()
+		if self.verbose:
+			self.printCurrentTrick()
+			print(p.name + " won the trick.")
+			print()
 
 	def getWinner(self):
 		minScore = 200  # impossibly high
@@ -190,14 +190,16 @@ class Hearts:
 		return winner
 
 	def playTrick(self, start):
+		if self.verbose:
+			print('\n==========Trick number ' + str(self.trick_num + 1) + '==========')
 		# have each player take their turn
 		for i in range(start, start + len(self.players)):
-
-			# self.printCurrentTrick()
 			curPlayerIndex = i % len(self.players)
 			curPlayer = self.players[curPlayerIndex]
-			# print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
 			played_card = None
+			if self.verbose:
+				self.printCurrentTrick()
+				print(curPlayer.name + "'s hand: " + str(curPlayer.hand))
 
 			game_state = GameState(curPlayerIndex, self.currentTrick, self.hearts_broken, self.players)
 
@@ -257,8 +259,6 @@ class Hearts:
 		self.evaluateTrick()
 		self.trick_num += 1
 
-
-	# print all players' hands
 	def printPlayers(self):
 		for p in self.players:
 			print(p.name + ": " + str(p.hand))
@@ -280,17 +280,17 @@ class Hearts:
 
 def main():
 	hearts = Hearts()
+	hearts.verbose = True
 
 	# play until someone loses
 	while hearts.losingPlayer is None or hearts.losingPlayer.score < maxScore:
 		print("====================Round " + str(hearts.round_num) + "====================")
-
 		while hearts.trick_num < totalTricks:
 			if hearts.trick_num == 0:
 				hearts.playersPassCards()
 				hearts.getFirstTrickStarter()
-			print('\n==========Trick number ' + str(hearts.trick_num + 1) + '==========')
 			hearts.playTrick(hearts.trickWinner)
+			hearts.currentTrick = Trick(hearts.trick_num)
 
 		# tally scores
 		hearts.handleScoring()
