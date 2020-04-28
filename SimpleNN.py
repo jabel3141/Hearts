@@ -1,6 +1,6 @@
 import random
 
-import Deck
+from Deck import Deck
 from Player import Player
 from play_nn import play_nn
 import numpy as np

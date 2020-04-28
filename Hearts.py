@@ -44,7 +44,7 @@ class Hearts:
 		p2		p4
 			p1
 		'''
-		self.players = [SimpleAI("Jason"), PolicyNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
+		self.players = [SimpleAI("Jason"), SimpleNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
 		self.newRound()
 
 	def reset(self):
