@@ -9,37 +9,6 @@ class SimpleNN(Player):
         self.play_policy = play_nn()
         # pass_policy = pass_nn()
 
-    def from_card_to_target(self, card):
-        suit = card[-1:]
-        rank = card[:-1]
-
-        suit_num = 0
-        if suit == 'c':
-            suit_num = 0
-        elif suit == 'd':
-            suit_num = 1
-        elif suit == 's':
-            suit_num = 2
-        elif suit == 'h':
-            suit_num = 3
-
-
-        if rank == "J":
-            rank_num = 11
-        elif rank == "Q":
-            rank_num = 12
-        elif rank == "K":
-            rank_num = 13
-        elif rank == "A":
-            rank_num = 14
-        else:
-            rank_num = int(rank)
-
-        target_val = suit_num*13 + rank_num-2
-
-        return target_val
-
-
     def select_play_card(self, game_state):
 
         # # make a random play (explore)
@@ -55,7 +24,6 @@ class SimpleNN(Player):
         legal_moves = self.legal_plays(game_state)
         if card not in self.legal_plays(game_state):
             card = random.choice(legal_moves)
-            self.play_policy.target = self.from_card_to_target(card)
 
 
         return card

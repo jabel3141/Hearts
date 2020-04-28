@@ -15,17 +15,6 @@ class Trick:
 		self.highest = None  # rank of the high trump suit card in hand
 		self.winner = -1
 
-	def __copy__(self):
-		new_trick = Trick(self.trick_num)
-
-		new_trick.trick = self.trick
-		new_trick.suit = self.suit
-		new_trick.cardsInTrick = self.cardsInTrick
-		new_trick.points = self.points
-		new_trick.highest = self.highest
-		new_trick.winner = self.winner
-
-		return new_trick
 	def reset(self):
 		self.trick = [0, 0, 0, 0]
 		self.suit = -1

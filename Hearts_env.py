@@ -31,7 +31,7 @@ class Hearts_env:
 
         # player lost the trick they scored zero
         else:
-            reward = 13 *20
+            reward = 13 *40
 
         return reward
 
