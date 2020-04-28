@@ -46,10 +46,15 @@ class Agent(object):
 
     def choose_action(self, game_state, legal_plays):
         # reformat the input and predict the probabilities of each action
-        nn_input = self.make_input(game_state)
-        nn_input = nn_input.reshape(1, 64)
-        # state = game_state[np.newaxis, :]
+        state = self.make_input(game_state)
+        nn_input = state[np.newaxis, :]
+
+        #save the state
+        self.state_memory.append(state)
+
+        #predict the probabilities of each action
         probabilities = self.predict.predict(nn_input)[0]
+
 
         #get rid of probabilites that arent in our hand
         plays = self.convert_card_to_num(legal_plays)
@@ -57,16 +62,32 @@ class Agent(object):
             if i not in plays:
                 probabilities[i] = 0
 
-        # remap the probabilities based on legal_playse
-        currentMaxProb = np.amax(probabilities)
-        for i, prob in enumerate(probabilities):
-            #Should convert to new range
-            newProb = np.interp(prob, (0, currentMaxProb), (0, 1))
-            probabilities[i] = newProb
+        playProbs = probabilities[plays]
+        minProb = np.min(playProbs)
+
+        #for legal plays with probability of 0 initially
+        #add a very small amount to they could theoretically be choosen
+        #handles cases where all legal plays are 0 for whatever reason...
+        if(minProb == 0):
+            size = np.nonzero(playProbs)
+            if(len(size[0]) > 0):
+                minProb = np.min(playProbs[np.nonzero(playProbs)]) / 1000
+                probabilities[plays] += minProb
+            else:
+                probabilities[plays] += (1 / len(plays))
+
+
+        # remap the probabilities based on legal_plays
+        sum = np.sum(probabilities)
+        probabilities = probabilities / sum
+
 
         #chooses a random action based on the probabilities of the prediction
         #allows for exploration
         action = np.random.choice(self.action_space, p=probabilities)
+
+        #save the action
+        self.action_memory.append(action)
 
         #converts choice to the given card
         suit = int(action / 13)
@@ -77,11 +98,13 @@ class Agent(object):
         return card
 
     #store the states, actions and rewards
-    def store_transition(self, observation, action, reward):
+    def store_transition(self, state, action, reward):
         self.action_memory.append(action)
-        self.state_memory.append(observation)
+        self.state_memory.append(state)
         self.reward_memory.append(reward)
 
+    def store_reward(self, reward):
+        self.reward_memory.append(reward)
 
     #TODO dont know where to have the model learn based on what we have rn
     def learn(self):
@@ -109,6 +132,7 @@ class Agent(object):
         mean = np.mean(G)
         std = np.std(G) if np.std(G) > 0 else 1
         self.G = (G - mean)/std
+
 
         cost = self.policy.train_on_batch([state_memory, self.G], actions)
 
@@ -226,3 +250,13 @@ class Agent(object):
             nn_input[i + 60] = players[i].currentScore
 
         return nn_input
+
+    @staticmethod
+    def rotate(players, num_rotate):
+        np_players = np.array(players)
+
+        np_players = np.roll(np_players, -1 * num_rotate)
+
+        players = np_players.tolist()
+
+        return players

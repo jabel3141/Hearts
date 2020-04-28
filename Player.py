@@ -52,6 +52,10 @@ class Player:
 	def train(self, reward):
 		pass
 
+
+	def store_reward(self, reward):
+		pass
+
 	def select_play_card(self, game_state):
 		pass
 
