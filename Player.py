@@ -114,7 +114,7 @@ class Player:
 		for card in self.cardsPlayed:
 			if not type(card) == int:
 				suit = card[-1:]
-				rank = card[:-1]
+				rank = suit[:-1]
 				if rank == played_rank and suit == played_suit:
 					return True
 		return False
@@ -124,7 +124,7 @@ class Player:
 		played_rank = played_card[:-1]
 		for card in self.passedCards[:-1]:
 			suit = card[-1:]
-			rank = card[:-1]
+			rank = suit[:-1]
 			if rank == played_rank and suit == played_suit:
 				return True
 		return False

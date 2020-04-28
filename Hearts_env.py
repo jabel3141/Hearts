@@ -1,5 +1,4 @@
 from Hearts import Hearts
-from Trick import Trick
 
 max_score = 100
 total_tricks = 13
@@ -20,19 +19,19 @@ class Hearts_env:
         if player_pos == player_won:
             # player shot the moon
             if self.hearts_game.players[player_won].currentScore == 26:
+                reward = 26 * 20
 
-                reward = 26*20
 
             else:
-                reward = (13 - self.hearts_game.currentTrick.points)*20
+                reward = (13 - self.hearts_game.currentTrick.points)
 
         # player lost the trick, but the winner shot the moon
         elif self.hearts_game.players[player_won].currentScore == 26:
-            reward = 10
+            reward = 0
 
         # player lost the trick they scored zero
         else:
-            reward = 13 *20
+            reward = 13
 
         return reward
 
@@ -63,7 +62,6 @@ def main():
 
                     a_palyer.train(q_reward)
 
-                trainer.hearts_game.currentTrick = Trick(trainer.hearts_game.trick_num)
             # tally scores
             trainer.hearts_game.handleScoring()
 
@@ -95,6 +93,7 @@ def main():
                 pass
 
         trainer.hearts_game.reset()
+
 
 if __name__ == '__main__':
     main()
