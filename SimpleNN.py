@@ -1,4 +1,6 @@
 import random
+
+from Deck import Deck
 from Player import Player
 from play_nn import play_nn
 import numpy as np
@@ -29,7 +31,8 @@ class SimpleNN(Player):
         return card
 
     def select_pass_card(self):
-        return random.choice(self.hand.clubs + self.hand.diamonds + self.hand.spades + self.hand.hearts)
+        all_cards = self.hand.clubs + self.hand.diamonds + self.hand.spades + self.hand.hearts
+        return sorted(all_cards, key=Deck.card_rank_to_sort_val)[-1]
 
     def train(self, reward):
         target = self.play_policy.target
