@@ -1,5 +1,6 @@
 from Hearts import Hearts
 from Trick import Trick
+import os
 
 max_score = 100
 total_tricks = 13
@@ -84,6 +85,7 @@ def main():
                 try:
                     player.play_policy.save_model()
                 except:
+                    print("AHH")
                     pass
 
         trainer.hearts_game.reset()
