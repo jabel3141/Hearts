@@ -1,6 +1,7 @@
 from Hearts import Hearts
 from Trick import Trick
 import os
+import numpy as np
 
 max_score = 100
 total_tricks = 13
@@ -31,6 +32,7 @@ class Hearts_env_policy:
 def main():
     trainer = Hearts_env_policy()
     tot_wins = 0
+    last200Wins = []
     sam_wins = 0
     jb_wins = 0
     current_odds = .5
@@ -73,8 +75,14 @@ def main():
         winnerString = ""
         for w in winners:
             winnerString += w.name + " "
+            if len(last200Wins) == 200:
+                last200Wins.pop(0)
+
             if w.name == "Jack":
                 tot_wins += 1
+                last200Wins.append(1)
+            else:
+                last200Wins.append(0)
             if w.name == "Sam":
                 sam_wins += 1
             if w.name == "JB":
@@ -85,6 +93,7 @@ def main():
             for a, player in enumerate(trainer.hearts_game.players):
                 print(player.name + ": " + str(player.score))
             print("Jack wins: ", tot_wins)
+            print("Jack last 200 games wins: ", np.sum(last200Wins))
             print("Sam wins: ", sam_wins)
             print("JB wins: ", jb_wins)
             print("num games: ", i)
