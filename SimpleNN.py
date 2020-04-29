@@ -45,3 +45,5 @@ class SimpleNN(Player):
         # legal = self.play_policy.last_legal
         self.play_policy.model.fit(model_input, target_vec, epochs=1, verbose=0)
 
+        self.play_policy.model.save_weights('q_model.h5')
+
