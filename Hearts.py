@@ -44,7 +44,7 @@ class Hearts:
 		p2		p4
 			p1
 		'''
-		self.players = [SimpleAI("Jason"), SimpleNN("Jack"), SimpleAI("Sam"), RandomAI("JB")]
+		self.players = [SimpleAI("Jason"), PolicyNN("Jack"), SimpleAI("Sam"), SimpleAI("JB")]
 		self.newRound()
 
 	def reset(self):
@@ -258,7 +258,6 @@ class Hearts:
 
 		self.evaluateTrick()
 		self.trick_num += 1
-		self.currentTrick = Trick(self.trick_num)
 
 	def printPlayers(self):
 		for p in self.players:

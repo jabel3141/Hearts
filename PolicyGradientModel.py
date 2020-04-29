@@ -5,8 +5,9 @@ import keras.backend as K
 import numpy as np
 from Deck import Deck
 
+
 class Agent(object):
-    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 256, layer2Size=128, inputSize=64, fname='policy.h5'):
+    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 256, layer2Size=128, inputSize=64, fname='models/policy/policy.h5'):
         self.gamma = gamma
         self.lr = lr
         self.G = 0  #discouted sum of rewards over each timestep

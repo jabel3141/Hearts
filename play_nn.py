@@ -57,7 +57,7 @@ class play_nn():
 
 
         try:
-            self.model.load_weights('q_model.h5')
+            self.model.load_weights('models/qlearn/q_model.h5')
         except:
             print("either no file or wrong network structure, should be good next time")
 
