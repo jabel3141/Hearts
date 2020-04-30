@@ -52,7 +52,7 @@ def main():
                 for j, a_palyer in enumerate(trainer.hearts_game.players):
                     q_reward = trainer.get_reward(j)
 
-                    a_palyer.train(q_reward)
+                    a_palyer.store_reward(q_reward)
 
                 trainer.hearts_game.currentTrick = Trick(trainer.hearts_game.trick_num)
             # tally scores
@@ -61,6 +61,9 @@ def main():
             # new round if no one has lost
             if trainer.hearts_game.losingPlayer.score < max_score:
                 trainer.hearts_game.newRound()
+
+            for j, a_palyer in enumerate(trainer.hearts_game.players):
+                a_palyer.learn()
 
         winners = trainer.hearts_game.getWinner()
         winnerString = ""
