@@ -33,6 +33,7 @@ def main():
     trainer = Hearts_env_policy()
     tot_wins = 0
     last200Wins = []
+    jason_wins = 0
     sam_wins = 0
     jb_wins = 0
     current_odds = .5
@@ -83,6 +84,8 @@ def main():
                 last200Wins.append(1)
             else:
                 last200Wins.append(0)
+            if w.name == "Jason":
+                jason_wins += 1
             if w.name == "Sam":
                 sam_wins += 1
             if w.name == "JB":
@@ -92,12 +95,15 @@ def main():
             print()
             for a, player in enumerate(trainer.hearts_game.players):
                 print(player.name + ": " + str(player.score))
-            print("Jack wins: ", tot_wins)
+            print(winnerString + "wins!")
+            print("--------------------------------------")
             print("Jack last 200 games wins: ", np.sum(last200Wins))
+            print("Jack wins: ", tot_wins)
+            print("Jason wins: ", jason_wins)
             print("Sam wins: ", sam_wins)
             print("JB wins: ", jb_wins)
             print("num games: ", i)
-            print(winnerString + "wins!")
+
 
         if i % 50 == 0:
             for player in trainer.hearts_game.players:

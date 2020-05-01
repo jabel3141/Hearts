@@ -7,7 +7,7 @@ from Deck import Deck
 class PolicyNN(Player):
     def __init__(self, name):
         super().__init__(name)
-        self.play_policy = Agent(lr=0.001, numActions=52, layer1Size=256, layer2Size=128, inputSize=64)
+        self.play_policy = Agent(lr=0.001, numActions=52, layer1Size=256, layer2Size=128, inputSize=116)
 
     def select_play_card(self, game_state):
         plays = self.legal_plays(game_state)
