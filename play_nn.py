@@ -41,7 +41,7 @@ class play_nn():
 
     def __init__(self):
         # TODO fix input shape to be the correct size and paly with netowrk shape
-        self.basic_input = Input((116,))
+        self.basic_input = Input((164,))
         self.x = Dense(256, activation='relu')(self.basic_input)
         self.x = Dense(128, activation='relu')(self.x)
         self.learn_legal = Dense(52, activation='relu', name='learn_legal')(self.x)
@@ -54,13 +54,10 @@ class play_nn():
 
         self.model.compile(loss='mse', optimizer='adam')
 
-
-
         try:
             self.model.load_weights('models/qlearn/q_model.h5')
         except:
             print("either no file or wrong network structure, should be good next time")
-
 
         # store to run again for the loss
         self.last_input = None
@@ -88,7 +85,7 @@ class play_nn():
         return players
 
     def make_input(self, game_info):
-        nn_input = np.zeros((116,))
+        nn_input = np.zeros((164,))
 
         # rotate us so we are player 0
         players = game_info.players
@@ -108,15 +105,22 @@ class play_nn():
         a_deck = Deck().deck
 
         # one hot instead keeping it simple first
-        # [1 0] we have the card
-        # [0 1] the card has been played
-        # [0 0] we don't know where the card is
+        # [1 0 0] we have the card
+        # [0 1 0] the card has been played
+        # [0 0 1] the card is on the table
+        # [0 0 0] we don't know where the card is
+        trick = game_info.trick
+
         for i, a_card in enumerate(a_deck):
 
             if my_hand.hasCard(a_card):
-                nn_input[i*2] = 1
-            elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card):
-                nn_input[i*2+1] = 1
+                nn_input[i * 2] = 1
+            elif a_card in trick.trick:
+                nn_input[i * 2 + 2] = 1
+            elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card)\
+                    or me.has_played(a_card):
+                nn_input[i * 2 + 1] = 1
+
 
         # elements 0-51 represent one card in the deck, the value represents where the card is
         # for i, a_card in enumerate(a_deck):
@@ -164,22 +168,21 @@ class play_nn():
         # make all numbers between 0 and 1
         # nn_input = np.true_divide(nn_input, 8)
 
-        trick = game_info.trick
 
         # fill in what the trick looks like so far, 0 it has not been played, value is the card value
-        for i in range(4):
-            try:
-                card_played = trick.trick[i]
-                card_val = from_card_to_target(card_played) / 52
-                nn_input[i + 104] = card_val
-            except:
-                nn_input[i + 104] = 0
+        # for i in range(4):
+        #     try:
+        #         card_played = trick.trick[i]
+        #         card_val = from_card_to_target(card_played) / 52
+        #         nn_input[i + 104] = card_val
+        #     except:
+        #         nn_input[i + 104] = 0
 
         # fill in the score for each player in the game
         for i in range(4):
             # total score
-            nn_input[i + 108] = players[i].score
-            nn_input[i + 112] = players[i].currentScore
+            nn_input[i + 156] = players[i].score
+            nn_input[i + 160] = players[i].currentScore
 
         return nn_input
 
@@ -197,6 +200,9 @@ class play_nn():
             if a_card in legal:
                 legal_plays[0, i, i] = 10
                 loss_legal_plays[i] = 10
+            else:
+                legal_plays[0, i, i] = .01
+                loss_legal_plays[i] = .01
         # store values for later loss
         self.last_legal = loss_legal_plays
         self.legal_loss_play = loss_legal_plays
@@ -204,6 +210,7 @@ class play_nn():
 
     def convert_prediction_to_card(self, prediction):
         prediction = prediction[0].flatten()
+        prediction = np.multiply(prediction, self.legal_loss_play)
         one_pred = argmax(prediction)
         self.target = one_pred
         suit = int(one_pred / 13)
@@ -221,7 +228,7 @@ class play_nn():
         legal_weights = self.make_legal_layer(me, game_state)
 
         # layer.set_weights(legal_weights)
-        nn_input = nn_input.reshape(1,116)
+        nn_input = nn_input.reshape(1, 164)
         prediction = self.model.predict(nn_input)
 
         return self.convert_prediction_to_card(prediction)
@@ -234,10 +241,11 @@ class play_nn():
         # legal_weights = self.make_legal_layer(me, game_state)
         #
         # layer.set_weights(legal_weights)
-        nn_input = nn_input.reshape(1, 116)
+        nn_input = nn_input.reshape(1, 164)
         prediction = self.model.predict(nn_input)
 
         return prediction
+
     # not sure how we are going to connect score from game to the network to keep gradient
     def train(self, scores):
         # best score is 0 so temporarily make list as long as scores of zeros
@@ -249,4 +257,3 @@ class play_nn():
                        epochs=1)
 
         # save the new weights to folder to bring up again
-

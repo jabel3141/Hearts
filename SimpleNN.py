@@ -86,6 +86,6 @@ class SimpleNN(Player):
         self.inputs = np.stack(self.inputs, axis=0)
         self.targets = np.stack(self.targets, axis=0)
         self.play_policy.model.train_on_batch(self.inputs, self.targets)
-        self.play_policy.model.save_weights('q_model.h5')
+        self.play_policy.model.save_weights('models/qlearn/q_model.h5')
         self.inputs = []
         self.targets = []
