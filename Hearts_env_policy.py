@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 max_score = 100
 total_tricks = 13
-epochs = 50
+epochs = 100
 
 
 class Hearts_env_policy:
@@ -110,6 +110,11 @@ def main():
             print("JB wins: ", jb_wins)
             print("num games: ", i)
 
+            jack = [pl for pl in trainer.hearts_game.players if pl.name == 'Jack'][0]
+
+            plot_records(record_final_score, "Final score", "models/policy/Scores.png")
+            plot_records(jack.play_policy.loss_policy, "Loss Actor", "models/policy/loss.png")
+
 
         if i % 50 == 0:
             for player in trainer.hearts_game.players:
@@ -118,22 +123,24 @@ def main():
                 except:
                     pass
 
-        trainer.hearts_game.reset()
 
+        trainer.hearts_game.reset()
 
     jack = [pl for pl in trainer.hearts_game.players if pl.name == 'Jack'][0]
 
-    plot_records(record_final_score, "Final score")
-    plot_records(jack.play_policy.loss_policy, "Loss Actor")
+    plot_records(record_final_score, "Final score", "models/policy/Scores.png")
+    plot_records(jack.play_policy.loss_policy, "Loss Actor", "models/policy/loss.png")
 
-def plot_records(records, metric):
+def plot_records(records, metric, filename):
     smoothed_records = pd.Series.rolling(pd.Series(records), 10).mean()
     
     plt.plot(records)
     plt.plot(smoothed_records)
     plt.xlabel("Number games")
     plt.ylabel(metric)
-    plt.show()
+    plt.savefig(filename)
+    # plt.show()
+    plt.clf()
 
 if __name__ == '__main__':
     main()
