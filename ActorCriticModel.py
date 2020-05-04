@@ -1,9 +1,24 @@
-from keras.layers import Dense, Activation, Input
+from keras.layers import Dense, Activation, Input, Lambda
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 import keras.backend as K
 import numpy as np
 from Deck import Deck
+
+
+COUNT = 0
+num_cards = 52
+
+def renormalize_function(params):
+    probas, legal_plays = params
+
+    # Kill illegal plays
+    probas = (probas + 1e-5) * legal_plays
+
+
+    return probas / (K.sum(probas))
+    
+# sampled_enc = Lambda(renormalize_function, output_shape = (enc_out, ))((mean, log_var))
 
 
 def from_card_to_target(card):
@@ -35,10 +50,11 @@ def from_card_to_target(card):
 
     return target_val
 
-
+def get_card_ix(card):
+    return from_card_to_target(card) - 1
 
 class Agent(object):
-    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 256, layer2Size=128, inputSize=116, fname='models/policy/policy.h5'):
+    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 256, layer2Size=128, inputSize=num_cards * 3 + 8, fnames=['models/actor_critic/actor.h5', 'models/actor_critic/critic.h5']):
         self.gamma = gamma
         self.lr = lr
         self.G = 0  #discouted sum of rewards over each timestep
@@ -49,79 +65,77 @@ class Agent(object):
         self.state_memory = []
         self.action_memory = []
         self.reward_memory = []
+        self.values_memory = []
+        self.legal_plays = []
+
+        self.loss_actor = []
+        self.loss_critic = []
 
 
-        self.policy, self.predict = self.build_policy_network()
+        self.actor, self.actor_trainer, self.critic = self.build_policy_network()
         self.action_space = [i for i in range(numActions)]
-        self.model_file = fname
+        self.model_file = fnames
 
 
     def build_policy_network(self):
-        input = Input(shape=(self.input_dims,))
-        advantages = Input(shape=[1])
-        layer1 = Dense(self.fc1_dim, activation='relu')(input)
-        layer2 = Dense(self.fc1_dim, activation='relu')(layer1)
-        # layer3 = Dense(self.fc1_dim, activation='relu')(layer2)
-        # layer4 = Dense(self.fc2_dim, activation='relu')(layer3)
-        # layer5 = Dense(self.fc2_dim, activation='relu')(layer4)
-        # layer6 = Dense(self.fc2_dim, activation='relu')(layer5)
-        outputLayer = Dense(self.numActions, activation='softmax')(layer2)
+        input = Input(shape=(self.input_dims,), name="Input_nn")
+        advantages = Input(shape=[1], name="Advantages")
+        legal_plays = Input(shape=[num_cards,], name="Legal_plays")
+        
+        actor_1 = Dense(self.fc1_dim, activation='relu', name="actor_dense_1")(input)
+        actor_2 = Dense(self.fc1_dim, activation='relu', name="actor_dense_2")(actor_1)
+        actor_pre = Dense(self.numActions, activation='softmax', name="actor_dense_3_soft")(actor_2)
+        actor_out = Lambda(renormalize_function, output_shape = (self.numActions, ))([actor_pre, legal_plays])
 
-        def customLoss(y_true, y_pred):
+
+        critic_1 = Dense(self.fc1_dim, activation='relu')(input)
+        critic_2 = Dense(self.fc1_dim, activation='relu')(critic_1)
+        critic_out = Dense(1, activation='linear')(critic_2)
+
+
+        def customLoss_actor(y_true, y_pred):
             out = K.clip(y_pred, 1e-8, 1-1e-8)
             log_lik = y_true * K.log(out)
 
-            return K.sum(-log_lik * advantages)
+            return K.sum(- log_lik * advantages)
 
-        policy = Model(input=[input, advantages], output=[outputLayer])
-        policy.compile(optimizer=Adam(lr=self.lr), loss=customLoss)
+        actor = Model(input=[input, legal_plays], output=[actor_out])
+        actor.compile(optimizer=Adam(lr=self.lr), loss=customLoss_actor)
 
-        prediction = Model(input=[input], output=[outputLayer])
+        actor_trainer = Model(input=[input, legal_plays, advantages], output=[actor_out])
+        actor_trainer.compile(optimizer=Adam(lr=self.lr), loss=customLoss_actor)
 
-        return policy, prediction
+
+        critic = Model(input=[input], output=[critic_out])
+        critic.compile(optimizer=Adam(lr=self.lr), loss="mean_squared_error")
+
+        return actor, actor_trainer, critic
 
     def choose_action(self, game_state, legal_plays):
         # reformat the input and predict the probabilities of each action
+        legal_plays = self.convert_legal_plays_to_array(legal_plays)
+
         state = self.make_input(game_state)
         nn_input = state[np.newaxis, :]
 
         #save the state
         self.state_memory.append(state)
-
+        self.legal_plays.append(legal_plays)
+        legal_plays = legal_plays.reshape(1, -1)
         #predict the probabilities of each action
-        probabilities = self.predict.predict(nn_input)[0]
-
-
-        #get rid of probabilites that arent in our hand
-        plays = self.convert_card_to_num(legal_plays)
-        for i in range(len(probabilities)):
-            if i not in plays:
-                probabilities[i] = 0
-
-        playProbs = probabilities[plays]
-        minProb = np.min(playProbs)
-
-        #for legal plays with probability of 0 initially
-        #add a very small amount to they could theoretically be choosen
-        #handles cases where all legal plays are 0 for whatever reason...
-        if(minProb == 0):
-            size = np.nonzero(playProbs)
-            if(len(size[0]) > 0):
-                minProb = np.min(playProbs[np.nonzero(playProbs)]) / 1000
-                probabilities[plays] += minProb
-            else:
-                probabilities[plays] += (1 / len(plays))
-
-
-        # remap the probabilities based on legal_plays
-        sum = np.sum(probabilities)
-        probabilities = probabilities / sum
+        probabilities = self.actor.predict([nn_input, legal_plays])[0]
+        value = self.critic.predict(nn_input)[0]
+        self.values_memory.append(value)
 
 
         #chooses a random action based on the probabilities of the prediction
         #allows for exploration
-        action = np.random.choice(self.action_space, p=probabilities)
-
+        try :
+            action = np.random.choice(self.action_space, p=probabilities)
+        except ValueError:
+            print(probabilities)
+            print(legal_plays)
+            exit()
         #save the action
         self.action_memory.append(action)
 
@@ -134,10 +148,11 @@ class Agent(object):
         return card
 
     #store the states, actions and rewards
-    def store_transition(self, state, action, reward):
+    def store_transition(self, state, action, reward, value):
         self.action_memory.append(action)
         self.state_memory.append(state)
         self.reward_memory.append(reward)
+        self.values_memory.appnd(value)
 
     def store_reward(self, reward):
         self.reward_memory.append(reward)
@@ -147,43 +162,58 @@ class Agent(object):
         state_memory = np.array(self.state_memory)
         action_memory = np.array(self.action_memory)
         reward_memory = np.array(self.reward_memory)
+        values_memory = np.array(self.values_memory)
+        legal_plays_memory = np.array(self.legal_plays)
+
+        final_Q_value = 26 - (state_memory[-1][3*num_cards + 4] + reward_memory[-1]) #My score
+
+        if np.any(reward_memory < 0):
+            print("Negative", reward_memory)
+            exit()
 
         #Creates a one hot encoding of the actions
         actions = np.zeros([len(action_memory), self.numActions])
-        actions[np.arange(len(action_memory)), action_memory] = 1
+        actions[:, action_memory] = 1
 
         #get the sum rewards based off the reward memory
-        G = np.zeros_like(reward_memory)
-        for t in range(len(reward_memory)):
-            G_sum = 0
-            discount = 1
-
-            for k in range(t, len(reward_memory)):
-                G_sum += reward_memory[k] * discount
-                discount *= self.gamma
-
-            G[t] = G_sum
-
-        #update G
-        mean = np.mean(G)
-        std = np.std(G) if np.std(G) > 0 else 1
-        self.G = (G - mean)/std
+        Q_values = np.zeros_like(values_memory) ## Ground truth
+        Q_val = final_Q_value
+        for t in reversed(range(len(reward_memory))):
+            Q_val = reward_memory[t] + self.gamma * Q_val
+            Q_values[t] = Q_val
 
 
-        cost = self.policy.train_on_batch([state_memory, self.G], actions)
+        advantages = Q_values - values_memory
+
+        #Normalize advantages
+        mean = np.mean(advantages)
+        std = np.std(advantages) if np.std(advantages) > 0 else 1
+        self.advantages = (advantages - mean)/std
+
+        # Train actor
+        loss_actor = self.actor_trainer.train_on_batch([state_memory, legal_plays_memory, self.advantages], actions)
+        self.loss_actor.append(loss_actor)
+        # Train critic
+        loss_critic = self.critic.train_on_batch([state_memory], Q_values)
+        self.loss_critic.append(loss_critic)
+
 
         self.state_memory = []
         self.action_memory = []
         self.reward_memory = []
+        self.values_memory = []
+        self.legal_plays = []
 
     def save_model(self):
-        self.policy.save(self.model_file)
+        self.actor.save(self.model_file[0])
+        self.critic.save(self.model_file[1])
 
     def load_model(self):
-        self.policy = load_model(self.model_file)
+        self.actor = load_model(self.model_file[0])
+        self.critic = load_model(self.model_file[1])
 
 
-    def convert_card_to_num(self, legal_plays):
+    def convert_legal_plays_to_array(self, legal_plays):
 
         legal_plays_index = []
         for card in legal_plays:
@@ -197,11 +227,13 @@ class Agent(object):
             index = (suitNum * 13) + rankNum
 
             legal_plays_index.append(index)
+    
+        legal_plays_array = np.zeros(num_cards)
+        legal_plays_array[legal_plays_index] = 1
 
-        return legal_plays_index
+        return legal_plays_array
 
     def make_input(self, game_info):
-        nn_input = np.zeros((116,))
 
         # rotate us so we are player 0
         players = game_info.players
@@ -213,40 +245,34 @@ class Agent(object):
         player_1 = players[1]
         player_2 = players[2]
         player_3 = players[3]
-        passed_to = me.passedCards[3] - player_pos
-
-        if passed_to < 0:
-            passed_to += 4
 
         a_deck = Deck().deck
 
         # one hot instead keeping it simple first
-        # [1 0] we have the card
-        # [0 1] the card has been played
-        # [0 0] we don't know where the card is
+        hand = np.zeros(num_cards)
+        played_cards = np.zeros(num_cards)
+        cards_on_board = np.zeros(num_cards)
+
         for i, a_card in enumerate(a_deck):
 
             if my_hand.hasCard(a_card):
-                nn_input[i * 2] = 1
+                hand[i] = 1
             elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card):
-                nn_input[i * 2 + 1] = 1
+                played_cards[i] = 1
 
         trick = game_info.trick
 
         # fill in what the trick looks like so far, 0 it has not been played, value is the card value
         for i in range(4):
-            try:
-                card_played = trick.trick[i]
-                card_val = from_card_to_target(card_played) / 52
-                nn_input[i + 104] = card_val
-            except:
-                nn_input[i + 104] = 0
+            if trick.trick[i] == 0:
+                continue
+            card_ix = get_card_ix(trick.trick[i])
+            cards_on_board[card_ix] = 1
 
         # fill in the score for each player in the game
-        for i in range(4):
-            # total score
-            nn_input[i + 108] = players[i].score
-            nn_input[i + 112] = players[i].currentScore
+        scores = [pl.score for pl in players] + [pl.currentScore for pl in players]
+
+        nn_input = np.concatenate((played_cards, hand, cards_on_board, scores))
 
         return nn_input
 

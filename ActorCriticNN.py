@@ -1,13 +1,15 @@
 from Player import Player
-from PolicyGradientModel import Agent
+from ActorCriticModel import Agent, num_cards
 import random
 from Deck import Deck
+
+learning_rate = 1e-4
 
 
 class ActorCriticNN(Player):
     def __init__(self, name):
         super().__init__(name)
-        self.play_policy = Agent(lr=0.001, numActions=52, layer1Size=256, layer2Size=128, inputSize=64)
+        self.play_policy = Agent(lr=learning_rate, numActions=52, layer1Size=256, layer2Size=128, inputSize=num_cards * 3 + 8)
 
     def select_play_card(self, game_state):
         plays = self.legal_plays(game_state)

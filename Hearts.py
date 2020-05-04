@@ -6,6 +6,7 @@ from Trick import Trick
 from GameState import GameState
 from SimpleNN import SimpleNN
 from PolicyNN import PolicyNN
+from ActorCriticNN import ActorCriticNN
 
 '''
 Change auto to False if you would like to play the game manually.
@@ -188,6 +189,9 @@ class Hearts:
 			elif p.score == minScore:
 				winner.append(p)
 		return winner
+
+	def getLosers(self):
+		return [pl for pl in self.players if pl.score >= 100]
 
 	def playTrick(self, start):
 		if self.verbose:
