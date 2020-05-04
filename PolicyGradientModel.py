@@ -38,13 +38,14 @@ def from_card_to_target(card):
 
 
 class Agent(object):
-    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 256, layer2Size=128, inputSize=116, fname='models/policy/policy.h5'):
+    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 512, layer2Size=256, layer3Size=128, inputSize=164, fname='models/policy/policy.h5'):
         self.gamma = gamma
         self.lr = lr
         self.G = 0  #discouted sum of rewards over each timestep
         self.input_dims = inputSize
         self.fc1_dim = layer1Size
         self.fc2_dim = layer2Size
+        self.fc3_dim = layer3Size
         self.numActions = numActions
         self.state_memory = []
         self.action_memory = []
@@ -60,12 +61,12 @@ class Agent(object):
         input = Input(shape=(self.input_dims,))
         advantages = Input(shape=[1])
         layer1 = Dense(self.fc1_dim, activation='relu')(input)
-        layer2 = Dense(self.fc1_dim, activation='relu')(layer1)
-        # layer3 = Dense(self.fc1_dim, activation='relu')(layer2)
-        # layer4 = Dense(self.fc2_dim, activation='relu')(layer3)
-        # layer5 = Dense(self.fc2_dim, activation='relu')(layer4)
+        layer2 = Dense(self.fc1_dim, activation='sigmoid')(layer1)
+        layer3 = Dense(self.fc2_dim, activation='relu')(layer2)
+        layer4 = Dense(self.fc2_dim, activation='sigmoid')(layer3)
+        layer5 = Dense(self.fc3_dim, activation='relu')(layer4)
         # layer6 = Dense(self.fc2_dim, activation='relu')(layer5)
-        outputLayer = Dense(self.numActions, activation='softmax')(layer2)
+        outputLayer = Dense(self.numActions, activation='softmax')(layer5)
 
         def customLoss(y_true, y_pred):
             out = K.clip(y_pred, 1e-8, 1-1e-8)
@@ -107,15 +108,18 @@ class Agent(object):
         if(minProb == 0):
             size = np.nonzero(playProbs)
             if(len(size[0]) > 0):
-                minProb = np.min(playProbs[np.nonzero(playProbs)]) / 1000
+                minProb = np.min(playProbs[np.nonzero(playProbs)]) / 100000
                 probabilities[plays] += minProb
             else:
                 probabilities[plays] += (1 / len(plays))
+                print("no guess")
 
 
         # remap the probabilities based on legal_plays
         sum = np.sum(probabilities)
         probabilities = probabilities / sum
+
+        # print(probabilities)
 
 
         #chooses a random action based on the probabilities of the prediction
@@ -288,7 +292,7 @@ class Agent(object):
     #     return nn_input
 
     def make_input(self, game_info):
-        nn_input = np.zeros((116,))
+        nn_input = np.zeros((164,))
 
         # rotate us so we are player 0
         players = game_info.players
@@ -308,32 +312,28 @@ class Agent(object):
         a_deck = Deck().deck
 
         # one hot instead keeping it simple first
-        # [1 0] we have the card
-        # [0 1] the card has been played
-        # [0 0] we don't know where the card is
+        # [1 0 0] we have the card
+        # [0 1 0] the card has been played
+        # [0 0 1] the card is on the table
+        # [0 0 0] we don't know where the card is
+        trick = game_info.trick
+
         for i, a_card in enumerate(a_deck):
 
             if my_hand.hasCard(a_card):
                 nn_input[i * 2] = 1
-            elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card):
+            elif a_card in trick.trick:
+                nn_input[i * 2 + 2] = 1
+            elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card) \
+                    or me.has_played(a_card):
                 nn_input[i * 2 + 1] = 1
 
-        trick = game_info.trick
-
-        # fill in what the trick looks like so far, 0 it has not been played, value is the card value
-        for i in range(4):
-            try:
-                card_played = trick.trick[i]
-                card_val = from_card_to_target(card_played) / 52
-                nn_input[i + 104] = card_val
-            except:
-                nn_input[i + 104] = 0
 
         # fill in the score for each player in the game
         for i in range(4):
             # total score
-            nn_input[i + 108] = players[i].score
-            nn_input[i + 112] = players[i].currentScore
+            nn_input[i + 156] = players[i].score
+            nn_input[i + 160] = players[i].currentScore
 
         return nn_input
 

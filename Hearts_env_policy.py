@@ -5,7 +5,7 @@ import numpy as np
 
 max_score = 100
 total_tricks = 13
-epochs = 100000
+epochs = 1000000
 
 
 class Hearts_env_policy:
@@ -17,15 +17,15 @@ class Hearts_env_policy:
     def get_reward(self, player_pos):
         score = self.hearts_game.players[player_pos].currentScore
         if score == 26:
-            return 78
+            return 10000
         opp_score = 0
         for i, p in enumerate(self.hearts_game.players):
             if p.currentScore == 26:
-                return -52
+                return -10000
             if i != player_pos:
                 opp_score += p.currentScore
 
-        reward = score * -4 + opp_score
+        reward = (score * -10) + (opp_score * 10)
         return reward
 
 
@@ -96,6 +96,7 @@ def main():
             for a, player in enumerate(trainer.hearts_game.players):
                 print(player.name + ": " + str(player.score))
             print(winnerString + "wins!")
+            # print(trainer.hearts_game.players[1].play_policy.G)
             print("--------------------------------------")
             print("Jack last 200 games wins: ", np.sum(last200Wins))
             print("Jack wins: ", tot_wins)
