@@ -2,10 +2,12 @@ from Hearts import Hearts
 from Trick import Trick
 import os
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt 
 
 max_score = 100
 total_tricks = 13
-epochs = 1000000
+epochs = 50
 
 
 class Hearts_env_policy:
@@ -33,6 +35,7 @@ def main():
     trainer = Hearts_env_policy()
     tot_wins = 0
     last200Wins = []
+    record_final_score = []
     jason_wins = 0
     sam_wins = 0
     jb_wins = 0
@@ -71,6 +74,8 @@ def main():
             # new round if no one has lost
             if trainer.hearts_game.losingPlayer.score < max_score:
                 trainer.hearts_game.newRound()
+
+        record_final_score.append(trainer.hearts_game.players[1].score)
 
         winners = trainer.hearts_game.getWinner()
         winnerString = ""
@@ -114,6 +119,21 @@ def main():
                     pass
 
         trainer.hearts_game.reset()
+
+
+    jack = [pl for pl in trainer.hearts_game.players if pl.name == 'Jack'][0]
+
+    plot_records(record_final_score, "Final score")
+    plot_records(jack.play_policy.loss_policy, "Loss Actor")
+
+def plot_records(records, metric):
+    smoothed_records = pd.Series.rolling(pd.Series(records), 10).mean()
+    
+    plt.plot(records)
+    plt.plot(smoothed_records)
+    plt.xlabel("Number games")
+    plt.ylabel(metric)
+    plt.show()
 
 if __name__ == '__main__':
     main()

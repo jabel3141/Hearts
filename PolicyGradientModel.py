@@ -51,6 +51,7 @@ class Agent(object):
         self.action_memory = []
         self.reward_memory = []
 
+        self.loss_policy = []
 
         self.policy, self.predict = self.build_policy_network()
         self.action_space = [i for i in range(numActions)]
@@ -175,6 +176,7 @@ class Agent(object):
 
 
         cost = self.policy.train_on_batch([state_memory, self.G], actions)
+        self.loss_policy.append(cost)
 
         self.state_memory = []
         self.action_memory = []
