@@ -1,4 +1,5 @@
-from keras.layers import Dense, Activation, Input
+import keras
+from keras.layers import Dense, Activation, Input, Conv1D
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 import keras.backend as K
@@ -59,15 +60,19 @@ class Agent(object):
 
 
     def build_policy_network(self):
-        input = Input(shape=(self.input_dims,))
+        card_input = Input(shape=(self.input_dims - 8, 1))
+        card_conv = Conv1D(filters=1, kernel_size=3, strides=3)(card_input)
+        other_input = Input(shape=(8, 1))
         advantages = Input(shape=[1])
-        layer1 = Dense(self.fc1_dim, activation='relu')(input)
-        layer2 = Dense(self.fc1_dim, activation='sigmoid')(layer1)
-        layer3 = Dense(self.fc2_dim, activation='relu')(layer2)
-        layer4 = Dense(self.fc2_dim, activation='sigmoid')(layer3)
-        layer5 = Dense(self.fc3_dim, activation='relu')(layer4)
+        x = keras.layers.concatenate([card_conv, other_input], axis=1)
+        f = keras.layers.Flatten()(x)
+        layer1 = Dense(256, activation='relu')(f)
+        layer2 = Dense(256, activation='relu')(layer1)
+        layer3 = Dense(128, activation='sigmoid')(layer2)
+        layer4 = Dense(126, activation='sigmoid')(layer3)
+        # layer5 = Dense(self.fc3_dim, activation='sigmoid')(layer4)
         # layer6 = Dense(self.fc2_dim, activation='relu')(layer5)
-        outputLayer = Dense(self.numActions, activation='softmax')(layer5)
+        outputLayer = Dense(self.numActions, activation='softmax')(layer4)
 
         def customLoss(y_true, y_pred):
             out = K.clip(y_pred, 1e-8, 1-1e-8)
@@ -75,23 +80,23 @@ class Agent(object):
 
             return K.sum(-log_lik * advantages)
 
-        policy = Model(input=[input, advantages], output=[outputLayer])
+        policy = Model(input=[card_input, other_input, advantages], output=[outputLayer])
         policy.compile(optimizer=Adam(lr=self.lr), loss=customLoss)
 
-        prediction = Model(input=[input], output=[outputLayer])
+        prediction = Model(input=[card_input, other_input], output=[outputLayer])
 
         return policy, prediction
 
     def choose_action(self, game_state, legal_plays):
         # reformat the input and predict the probabilities of each action
         state = self.make_input(game_state)
-        nn_input = state[np.newaxis, :]
-
+        card_input = state[0].reshape((1, -1, 1))
+        other_input = state[1].reshape((1, -1, 1))
         #save the state
         self.state_memory.append(state)
 
         #predict the probabilities of each action
-        probabilities = self.predict.predict(nn_input)[0]
+        probabilities = self.predict.predict([card_input, other_input])[0]
 
 
         #get rid of probabilites that arent in our hand
@@ -176,8 +181,9 @@ class Agent(object):
         self.G = G
         # print(self.G)
 
-
-        cost = self.policy.train_on_batch([state_memory, self.G], actions)
+        cost = self.policy.train_on_batch([np.concatenate(state_memory[:, 0]).reshape((-1, 156, 1)),
+                                           np.concatenate(state_memory[:, 1]).reshape((-1, 8, 1)),
+                                           self.G], actions)
         self.loss_policy.append(cost)
 
         self.state_memory = []
@@ -208,95 +214,9 @@ class Agent(object):
 
         return legal_plays_index
 
-    # def make_input(self, game_info):
-    #     nn_input = np.zeros((64,))
-    #
-    #     # rotate us so we are player 0
-    #     players = game_info.players
-    #     player_pos = game_info.playerPos
-    #     players = self.rotate(players, player_pos)
-    #
-    #     me = players[0]
-    #     my_hand = me.hand
-    #     i_played = me.cardsPlayed
-    #     i_passed = me.passedCards[:3]
-    #     player_1 = players[1]
-    #     player_2 = players[2]
-    #     player_3 = players[3]
-    #     passed_to = me.passedCards[3] - player_pos
-    #
-    #     if passed_to < 0:
-    #         passed_to += 4
-    #
-    #     a_deck = Deck().deck
-    #
-    #     # elements 0-51 represent one card in the deck, the value represents where the card is
-    #     for i, a_card in enumerate(a_deck):
-    #         # 1 if the card is in our hand
-    #         suit = a_card[-1:]
-    #         rank = a_card[:-1]
-    #         if my_hand.hasCard(a_card):
-    #             nn_input[i] = 1
-    #
-    #         # 2 we played it
-    #         elif me.has_played(a_card):
-    #             nn_input[i] = 2
-    #
-    #         # 3 passed to player 1
-    #         elif me.has_passed(a_card):
-    #             if passed_to == 1:
-    #                 nn_input[i] = 3
-    #
-    #         # 4 player 1 played
-    #         elif player_1.has_played(a_card):
-    #             nn_input[i] = 4
-    #
-    #         # 5 passed to player 2
-    #         elif me.has_passed(a_card):
-    #             if passed_to == 2:
-    #                 nn_input[i] = 5
-    #
-    #         # 6 player 2 played
-    #         elif player_2.has_played(a_card):
-    #             nn_input[i] = 6
-    #
-    #         # 7 passed to player 3
-    #         elif me.has_passed(a_card):
-    #             if passed_to == 3:
-    #                 nn_input[i] = 7
-    #
-    #         # 8 player 3 played
-    #         elif player_3.has_played(a_card):
-    #             nn_input[i] = 8
-    #
-    #         # 0 have not seen the card
-    #         else:
-    #             nn_input[i] = 0
-    #
-    #     # make all numbers between 0 and 1
-    #     nn_input = np.true_divide(nn_input, 8)
-    #
-    #     trick = game_info.trick
-    #
-    #     # fill in what the trick looks like so far, 0 it has not been played, value is the card value
-    #     for i in range(4):
-    #         try:
-    #             card_played = trick[i]
-    #             card_val = (4 * card_played.suit + 13 * card_played.rank) / 52
-    #             nn_input[i + 52] = card_val
-    #         except:
-    #             nn_input[i + 52] = 0
-    #
-    #     # fill in the score for each player in the game
-    #     for i in range(4):
-    #         # total score
-    #         nn_input[i + 56] = players[i].score
-    #         nn_input[i + 60] = players[i].currentScore
-    #
-    #     return nn_input
-
     def make_input(self, game_info):
-        nn_input = np.zeros((164,))
+        card_input = np.zeros((156,))
+        other_input = np.zeros((8,))
 
         # rotate us so we are player 0
         players = game_info.players
@@ -325,20 +245,20 @@ class Agent(object):
         for i, a_card in enumerate(a_deck):
 
             if my_hand.hasCard(a_card):
-                nn_input[i * 3] = 1
+                card_input[i * 3] = 1
             elif a_card in trick.trick:
-                nn_input[i * 3 + 2] = 1
+                card_input[i * 3 + 2] = 1
             elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card) \
                     or me.has_played(a_card):
-                nn_input[i * 3 + 1] = 1
+                card_input[i * 3 + 1] = 1
 
         # fill in the score for each player in the game
         for i in range(4):
             # total score
-            nn_input[i + 156] = players[i].score
-            nn_input[i + 160] = players[i].currentScore
+            other_input[i] = players[i].score
+            other_input[i] = players[i].currentScore
 
-        return nn_input
+        return card_input, other_input
 
     @staticmethod
     def rotate(players, num_rotate):

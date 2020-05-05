@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 max_score = 100
 total_tricks = 13
-epochs = 5000000
+epochs = 20000
 
 
 class Hearts_env_policy:
@@ -129,7 +129,7 @@ def main():
             last200Wins.append(0)
         last200scores.append(trainer.hearts_game.players[1].score)
 
-        if i % 25 == 0:
+        if i % 200 == 0:
             print()
             for a, player in enumerate(trainer.hearts_game.players):
                 print(player.name + ": " + str(player.score))
@@ -150,7 +150,7 @@ def main():
             plot_records(jack.play_policy.loss_policy, "Loss Actor", "models/policy/loss.png")
 
 
-        if i % 50 == 0:
+        if i % 200 == 0:
             for player in trainer.hearts_game.players:
                 try:
                     player.play_policy.save_model()
