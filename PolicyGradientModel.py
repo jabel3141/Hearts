@@ -325,13 +325,12 @@ class Agent(object):
         for i, a_card in enumerate(a_deck):
 
             if my_hand.hasCard(a_card):
-                nn_input[i * 2] = 1
+                nn_input[i * 3] = 1
             elif a_card in trick.trick:
-                nn_input[i * 2 + 2] = 1
+                nn_input[i * 3 + 2] = 1
             elif player_1.has_played(a_card) or player_2.has_played(a_card) or player_3.has_played(a_card) \
                     or me.has_played(a_card):
-                nn_input[i * 2 + 1] = 1
-
+                nn_input[i * 3 + 1] = 1
 
         # fill in the score for each player in the game
         for i in range(4):
