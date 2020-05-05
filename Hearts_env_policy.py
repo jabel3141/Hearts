@@ -54,12 +54,14 @@ def main():
     trainer = Hearts_env_policy()
     tot_wins = 0
     last200Wins = []
+    last200scores = []
     record_final_score = []
     jason_wins = 0
     sam_wins = 0
     jb_wins = 0
     current_odds = .5
     trainer.hearts_game = Hearts()
+
     for i in range(epochs):
 
 
@@ -104,22 +106,28 @@ def main():
 
         winners = trainer.hearts_game.getWinner()
         winnerString = ""
+        if len(last200Wins) == 200:
+            last200Wins.pop(0)
+        if len(last200scores) == 200:
+            last200scores.pop(0)
+
+        modelWon = False
         for w in winners:
             winnerString += w.name + " "
-            if len(last200Wins) == 200:
-                last200Wins.pop(0)
-
             if w.name == "Jack":
                 tot_wins += 1
-                last200Wins.append(1)
-            else:
-                last200Wins.append(0)
-            if w.name == "Jason":
+                modelWon = True
+            elif w.name == "Jason":
                 jason_wins += 1
-            if w.name == "Sam":
+            elif w.name == "Sam":
                 sam_wins += 1
-            if w.name == "JB":
+            elif w.name == "JB":
                 jb_wins += 1
+        if modelWon:
+            last200Wins.append(1)
+        else:
+            last200Wins.append(0)
+        last200scores.append(trainer.hearts_game.players[1].score)
 
         if i % 25 == 0:
             print()
@@ -129,6 +137,7 @@ def main():
             # print(trainer.hearts_game.players[1].play_policy.G)
             print("--------------------------------------")
             print("Jack last 200 games wins: ", np.sum(last200Wins))
+            print("Jack last 200 games avg score: ", np.sum(last200scores) / len(last200scores))
             print("Jack wins: ", tot_wins)
             print("Jason wins: ", jason_wins)
             print("Sam wins: ", sam_wins)
