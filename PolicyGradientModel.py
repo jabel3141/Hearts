@@ -170,9 +170,11 @@ class Agent(object):
             G[t] = G_sum
 
         #update G
-        mean = np.mean(G)
-        std = np.std(G) if np.std(G) > 0 else 1
-        self.G = (G - mean)/std
+        # mean = np.mean(G)
+        # std = np.std(G) if np.std(G) > 0 else 1
+        # self.G = (G - mean)/std
+        self.G = G
+        # print(self.G)
 
 
         cost = self.policy.train_on_batch([state_memory, self.G], actions)

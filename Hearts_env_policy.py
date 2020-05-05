@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 max_score = 100
 total_tricks = 13
-epochs = 100
+epochs = 5000000
 
 
 class Hearts_env_policy:
@@ -16,18 +16,37 @@ class Hearts_env_policy:
         self.hearts_game = Hearts()
         os.makedirs('models/policy', exist_ok=True)
 
+    #If they got points, 0 otherwise 1
+    def get_reward_simple(self, player_pos):
+        trickPoints = self.hearts_game.currentTrick.points
+        if (self.hearts_game.trickWinner == player_pos) and (trickPoints > 0):
+            reward = 0
+        else:
+            reward = 1
+
+        return reward
+
+    def get_reward_simple_v2(self, player_pos):
+        trickPoints = self.hearts_game.currentTrick.points
+        if (self.hearts_game.trickWinner == player_pos) and (trickPoints > 0):
+            reward = 0
+        else:
+            reward = trickPoints
+
+        return reward
+
     def get_reward(self, player_pos):
         score = self.hearts_game.players[player_pos].currentScore
         if score == 26:
-            return 10000
+            return 78
         opp_score = 0
         for i, p in enumerate(self.hearts_game.players):
             if p.currentScore == 26:
-                return -10000
+                return -56
             if i != player_pos:
                 opp_score += p.currentScore
 
-        reward = (score * -10) + (opp_score * 10)
+        reward = (score * -4) + opp_score
         return reward
 
 
@@ -57,9 +76,13 @@ def main():
 
                 trainer.hearts_game.playTrick(trainer.hearts_game.trickWinner)
 
+
                 # add reward to the model for this timestep
                 for j, a_palyer in enumerate(trainer.hearts_game.players):
-                    q_reward = trainer.get_reward(j)
+
+                    # q_reward = trainer.get_reward(j)
+                    q_reward = trainer.get_reward_simple(j)
+                    # q_reward = trainer.get_reward_simple_v2(j)
 
                     a_palyer.store_reward(q_reward)
 
@@ -76,6 +99,8 @@ def main():
                 trainer.hearts_game.newRound()
 
         record_final_score.append(trainer.hearts_game.players[1].score)
+
+        # trainer.hearts_game.players[1].play_policy.learn()
 
         winners = trainer.hearts_game.getWinner()
         winnerString = ""
