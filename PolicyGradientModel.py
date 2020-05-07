@@ -1,9 +1,10 @@
 import keras
-from keras.layers import Dense, Activation, Input, Conv1D
-from keras.models import Model, load_model
+from keras.layers import Dense, Input, Conv1D
+from keras.models import Model
 from keras.optimizers import Adam
 import keras.backend as K
 import numpy as np
+import os
 from Deck import Deck
 
 
@@ -57,6 +58,9 @@ class Agent(object):
         self.policy, self.predict = self.build_policy_network()
         self.action_space = [i for i in range(numActions)]
         self.model_file = fname
+        if os.path.exists(self.model_file):
+            print("loading model")
+            self.load_model()
 
 
     def build_policy_network(self):
@@ -192,11 +196,10 @@ class Agent(object):
         self.reward_memory = []
 
     def save_model(self):
-        self.policy.save(self.model_file)
+        self.policy.save_weights(self.model_file)
 
     def load_model(self):
-        self.policy = load_model(self.model_file)
-
+        self.policy.load_weights(self.model_file)
 
     def convert_card_to_num(self, legal_plays):
 

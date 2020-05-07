@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 
 max_score = 100
 total_tricks = 13
-epochs = 100000
+epochs = 10000
+train = True
 
 
 class Hearts_env_policy:
@@ -60,7 +61,6 @@ def main():
     sam_wins = 0
     jb_wins = 0
     current_odds = .5
-    trainer.hearts_game = Hearts()
 
     for i in range(epochs):
 
@@ -144,7 +144,7 @@ def main():
             print("JB wins: ", jb_wins)
             print("num games: ", i + 1)
 
-        if i % 500 == 499:  # Physical save
+        if train and i % 500 == 499:  # Physical save
             jack = [pl for pl in trainer.hearts_game.players if pl.name == 'Jack'][0]
 
             plot_records(record_final_score, "Final score", "models/policy/Scores.png")
