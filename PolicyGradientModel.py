@@ -60,19 +60,20 @@ class Agent(object):
 
 
     def build_policy_network(self):
-        card_input = Input(shape=(self.input_dims - 8, 1))
+        card_input = Input(shape=(self.input_dims - 13, 1))
         card_conv = Conv1D(filters=1, kernel_size=3, strides=3)(card_input)
-        other_input = Input(shape=(8, 1))
+        other_input = Input(shape=(13, 1))
         advantages = Input(shape=[1])
         x = keras.layers.concatenate([card_conv, other_input], axis=1)
         f = keras.layers.Flatten()(x)
-        layer1 = Dense(256, activation='relu')(f)
+        layer1 = Dense(512, activation='relu')(f)
         layer2 = Dense(256, activation='relu')(layer1)
-        layer3 = Dense(128, activation='sigmoid')(layer2)
-        layer4 = Dense(126, activation='sigmoid')(layer3)
-        # layer5 = Dense(self.fc3_dim, activation='sigmoid')(layer4)
+        layer3 = Dense(256, activation='relu')(layer2)
+        layer4 = Dense(128, activation='relu')(layer3)
+        skip_layer = keras.layers.concatenate([f, layer4])
+        layer5 = Dense(128, activation='sigmoid')(skip_layer)
         # layer6 = Dense(self.fc2_dim, activation='relu')(layer5)
-        outputLayer = Dense(self.numActions, activation='softmax')(layer4)
+        outputLayer = Dense(self.numActions, activation='softmax')(layer5)
 
         def customLoss(y_true, y_pred):
             out = K.clip(y_pred, 1e-8, 1-1e-8)
@@ -182,7 +183,7 @@ class Agent(object):
         # print(self.G)
 
         cost = self.policy.train_on_batch([np.concatenate(state_memory[:, 0]).reshape((-1, 156, 1)),
-                                           np.concatenate(state_memory[:, 1]).reshape((-1, 8, 1)),
+                                           np.concatenate(state_memory[:, 1]).reshape((-1, 13, 1)),
                                            self.G], actions)
         self.loss_policy.append(cost)
 
@@ -216,7 +217,7 @@ class Agent(object):
 
     def make_input(self, game_info):
         card_input = np.zeros((156,))
-        other_input = np.zeros((8,))
+        other_input = np.zeros((13,))
 
         # rotate us so we are player 0
         players = game_info.players
@@ -255,8 +256,14 @@ class Agent(object):
         # fill in the score for each player in the game
         for i in range(4):
             # total score
-            other_input[i] = players[i].score
-            other_input[i] = players[i].currentScore
+            other_input[2 * i] = players[i].score
+            other_input[2 * i + 1] = players[i].currentScore
+
+        # encode leading suit
+        if trick.suit == 'x':
+            other_input[8] = 1
+        else:
+            other_input[9 + Deck.suit_index(trick.suit)] = 1
 
         return card_input, other_input
 
