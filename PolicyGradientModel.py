@@ -8,38 +8,7 @@ import os
 from Deck import Deck
 
 
-def from_card_to_target(card):
-    suit = card[-1:]
-    rank = card[:-1]
-
-    suit_num = 0
-    if suit == 'c':
-        suit_num = 0
-    elif suit == 'd':
-        suit_num = 1
-    elif suit == 's':
-        suit_num = 2
-    elif suit == 'h':
-        suit_num = 3
-
-    if rank == "J":
-        rank_num = 11
-    elif rank == "Q":
-        rank_num = 12
-    elif rank == "K":
-        rank_num = 13
-    elif rank == "A":
-        rank_num = 14
-    else:
-        rank_num = int(rank)
-
-    target_val = suit_num * 13 + rank_num - 1
-
-    return target_val
-
-
-
-class Agent(object):
+class PolicyGradientModel(object):
     def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 512, layer2Size=256, layer3Size=128, inputSize=164, fname='models/policy/policy.h5'):
         self.gamma = gamma
         self.lr = lr
@@ -61,7 +30,6 @@ class Agent(object):
         if os.path.exists(self.model_file):
             print("loading model")
             self.load_model()
-
 
     def build_policy_network(self):
         card_input = Input(shape=(self.input_dims - 13, 1))
@@ -157,7 +125,6 @@ class Agent(object):
     def store_reward(self, reward):
         self.reward_memory.append(reward)
 
-    #TODO dont know where to have the model learn based on what we have rn
     def learn(self):
         state_memory = np.array(self.state_memory)
         action_memory = np.array(self.action_memory)
@@ -202,7 +169,6 @@ class Agent(object):
         self.policy.load_weights(self.model_file)
 
     def convert_card_to_num(self, legal_plays):
-
         legal_plays_index = []
         for card in legal_plays:
             # 1 if the card is in our hand
