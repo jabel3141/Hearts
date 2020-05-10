@@ -11,12 +11,14 @@ import matplotlib.pyplot as plt
 max_score = 100
 total_tricks = 13
 epochs = 10000
+batch_size = 5
 train = True
+play_self = False
 
 physical_save_epochs = 500
 display_stats_epochs = 200
 
-track = [False, False, False, False]
+track = [True, False, False, False]
 randomize_players = []
 
 
@@ -67,14 +69,16 @@ def main():
     player1_scores = np.array([])
     player2_scores = np.array([])
     player3_scores = np.array([])
+    num_hands = 0
 
-    policy1 = PolicyNN("Sam")
-    models = policy1.play_policy.policy, policy1.play_policy.predict
-    policy2 = PolicyNN("Jack", models=models)
-    policy3 = PolicyNN("Jason", models=models)
-    policy4 = PolicyNN("JB", models=models)
-    # trainer.hearts_game.players = [policy1, policy2, policy3, policy4]
-    trainer.hearts_game.reset()
+    if play_self:
+        policy1 = PolicyNN("Sam")
+        models = policy1.play_policy.policy, policy1.play_policy.predict
+        policy2 = PolicyNN("Jack", models=models)
+        policy3 = PolicyNN("Jason", models=models)
+        policy4 = PolicyNN("JB", models=models)
+        trainer.hearts_game.players = [policy1, policy2, policy3, policy4]
+        trainer.hearts_game.reset()
 
     for i in range(epochs):
         # play until someone loses
@@ -102,7 +106,10 @@ def main():
             if train:
                 for j, player in enumerate(trainer.hearts_game.players):
                     if type(player) is PolicyNN:
-                        trainer.hearts_game.players[j].play_policy.learn()
+                        num_hands += 1
+                        if num_hands == batch_size:
+                            player.play_policy.learn(batch_size)
+                            num_hands = 0
 
             # new round if no one has lost
             if trainer.hearts_game.losingPlayer.score < max_score:

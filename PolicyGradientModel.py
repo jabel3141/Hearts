@@ -126,33 +126,30 @@ class PolicyGradientModel(object):
     def store_reward(self, reward):
         self.reward_memory.append(reward)
 
-    def learn(self):
+    def learn(self, num_hands):
         state_memory = np.array(self.state_memory)
         action_memory = np.array(self.action_memory)
         reward_memory = np.array(self.reward_memory)
 
-        #Creates a one hot encoding of the actions
+        # Creates a one hot encoding of the actions
         actions = np.zeros([len(action_memory), self.numActions])
         actions[np.arange(len(action_memory)), action_memory] = 1
 
-        #get the sum rewards based off the reward memory
+        # get the sum rewards based off the reward memory
         G = np.zeros_like(reward_memory)
-        for t in range(len(reward_memory)):
-            G_sum = 0
-            discount = 1
+        for j in range(num_hands):
+            for t in range(len(reward_memory)//num_hands):
+                G_sum = 0
+                discount = 1
 
-            for k in range(t, len(reward_memory)):
-                G_sum += reward_memory[k] * discount
-                discount *= self.gamma
+                for k in range(t, 13):
+                    G_sum += reward_memory[j*13+k] * discount
+                    discount *= self.gamma
 
-            G[t] = G_sum
+                G[j*13+t] = G_sum
 
-        #update G
-        # mean = np.mean(G)
-        # std = np.std(G) if np.std(G) > 0 else 1
-        # self.G = (G - mean)/std
+        # update G
         self.G = G
-        # print(self.G)
 
         cost = self.policy.train_on_batch([np.concatenate(state_memory[:, 0]).reshape((-1, 156, 1)),
                                            np.concatenate(state_memory[:, 1]).reshape((-1, 13, 1)),
