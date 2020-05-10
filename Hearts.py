@@ -45,7 +45,7 @@ class Hearts:
 		p2		p4
 			p1
 		'''
-		self.players = [SimpleAI("Jason"), PolicyNN("Jack"), SimpleAI("Sam"), SimpleAI("JB")]
+		self.players = [PolicyNN("Jason"), SimpleAI("Jack"), SimpleAI("Sam"), SimpleAI("JB")]
 		self.newRound()
 
 	def reset(self):
@@ -238,12 +238,10 @@ class Hearts:
 							if self.currentTrick.suit == 'x' and played_card != '2c':
 								print("First card of the round must be the 2 of clubs")
 								played_card = None
-							if suit == 'h':
-								print("Hearts cannot be played on the first hand.")
-								played_card = None
-							elif suit == 's' and rank == 'Q':
-								print("The queen of spades cannot be played on the first hand.")
-								played_card = None
+							if suit == 'h' or (suit == 's' and rank == 'Q'):
+								if curPlayer.hand.has_only_points():
+									print("Points cannot be played on the first hand when possible.")
+									played_card = None
 
 					# player tries to play off suit but has trick suit
 					if played_card is not None and suit != self.currentTrick.suit:

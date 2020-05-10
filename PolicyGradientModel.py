@@ -9,7 +9,7 @@ from Deck import Deck
 
 
 class PolicyGradientModel(object):
-    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 512, layer2Size=256, layer3Size=128, inputSize=164, fname='models/policy/policy.h5'):
+    def __init__(self, lr, gamma=0.99, numActions=52, layer1Size = 512, layer2Size=256, layer3Size=128, inputSize=164, fname='models/policy/policy.h5', models=None):
         self.gamma = gamma
         self.lr = lr
         self.G = 0  #discouted sum of rewards over each timestep
@@ -24,11 +24,15 @@ class PolicyGradientModel(object):
 
         self.loss_policy = []
 
-        self.policy, self.predict = self.build_policy_network()
+        if not models:
+            self.policy, self.predict = self.build_policy_network()
+        else:
+            self.policy = models[0]
+            self.predict = models[1]
         self.action_space = [i for i in range(numActions)]
         self.model_file = fname
         if os.path.exists(self.model_file):
-            print("loading model")
+            print("Loading model from", fname)
             self.load_model()
 
     def build_policy_network(self):
@@ -97,9 +101,6 @@ class PolicyGradientModel(object):
         # remap the probabilities based on legal_plays
         sum = np.sum(probabilities)
         probabilities = probabilities / sum
-
-        # print(probabilities)
-
 
         #chooses a random action based on the probabilities of the prediction
         #allows for exploration

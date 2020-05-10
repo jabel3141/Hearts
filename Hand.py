@@ -72,6 +72,13 @@ class Hand:
 	def hasOnlyHearts(self):
 		return len(self.hearts) == self.size()
 
+	def has_only_points(self):
+		if len(self.hearts) == self.size():
+			return True
+		if len(self.hearts) == self.size() - 1 and len(self.spades) == 1 and self.spades[0] == 'Qs':
+			return True
+		return False
+
 	def __str__(self):
 		hand_str = ''
 		for suit in self.hand:
