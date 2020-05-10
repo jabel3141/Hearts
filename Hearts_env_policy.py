@@ -104,12 +104,12 @@ def main():
 
             # Learn based off the past round
             if train:
-                for j, player in enumerate(trainer.hearts_game.players):
-                    if type(player) is PolicyNN:
-                        num_hands += 1
-                        if num_hands == batch_size:
-                            player.play_policy.learn(batch_size)
-                            num_hands = 0
+                num_hands += 1
+                if num_hands == batch_size:
+                    for j, player in enumerate(trainer.hearts_game.players):
+                        if type(player) is PolicyNN:
+                                player.play_policy.learn(batch_size)
+                    num_hands = 0
 
             # new round if no one has lost
             if trainer.hearts_game.losingPlayer.score < max_score:
