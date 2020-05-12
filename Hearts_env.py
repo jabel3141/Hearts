@@ -6,9 +6,8 @@ max_score = 100
 total_tricks = 13
 epochs = 100000
 
-
+# TODO update based on Hearts_env_policy
 class Hearts_env:
-
     def __init__(self):
         self.hearts_game = Hearts()
         os.makedirs('models/qlearn', exist_ok=True)
@@ -88,7 +87,6 @@ def main():
                 try:
                     player.play_policy.save_model()
                 except:
-                    print("AHH")
                     pass
 
         trainer.hearts_game.reset()

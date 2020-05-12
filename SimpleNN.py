@@ -46,21 +46,11 @@ class SimpleNN(Player):
         return target_val
 
     def select_play_card(self, game_state):
-        # # make a random play (explore)
-        # if np.random.random() < self.play_policy.odds_explore:
-        #     # sets up the network and puts the game state into the network
-        #     card = self.play_policy.predict(game_state)
-        #     card = random.choice(self.legal_plays(game_state))
-        # # exploit
-        # else:
-        #     card = self.play_policy.predict(game_state)
-
         card = self.play_policy.predict(game_state)
         legal_moves = self.legal_plays(game_state)
         if card not in self.legal_plays(game_state):
             card = random.choice(legal_moves)
             self.play_policy.target = self.from_card_to_target(card)
-
 
         return card
 
@@ -78,7 +68,6 @@ class SimpleNN(Player):
         model_input = np.expand_dims(self.play_policy.last_input, axis=0)
         self.inputs.append(self.play_policy.last_input)
         self.targets.append(target_vec)
-
 
         # legal = self.play_policy.last_legal
 

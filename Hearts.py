@@ -84,7 +84,6 @@ class Hearts:
 			for a_player in self.players:
 				a_player.score += a_player.currentScore
 
-
 		for i, player in enumerate(self.players):
 			if self.verbose:
 				print(player.name + ": " + str(player.score))

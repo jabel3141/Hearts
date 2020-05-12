@@ -8,11 +8,3 @@ class GameState:
     def __copy__(self):
         return GameState(player_pos=self.playerPos, trick=self.trick.__copy__(), hearts_broken=self.hearts_broken,
                          players=self.players)
-
-    def getCurrentScore(self):
-        tempScores = []
-
-        for aPlayer in self.players:
-            tempScores.append(aPlayer.currentScore)
-
-        return tempScores
